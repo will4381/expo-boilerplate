@@ -1,0 +1,725 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Expo Boilerplate View Rules
+
+## 🏛️ View Architecture Guidelines
+
+### **Current View Structure with Expo Router**
+```
+app/
+├── _layout.tsx          # Root layout configuration
+├── splashView.tsx       # Initial splash screen
+├── +not-found.tsx       # 404 error handling
+├── (onboarding)/        # Onboarding flow screens
+│   ├── _layout.tsx      # Onboarding layout
+│   ├── welcome.tsx      # Welcome screen
+│   ├── step1.tsx        # Onboarding step 1
+│   └── step2.tsx        # Onboarding step 2
+├── (tabs)/             # Main app tab navigation
+│   ├── _layout.tsx     # Tab layout configuration
+│   ├── index.tsx       # Home/Dashboard tab
+│   ├── explore.tsx     # Explore tab
+│   └── profile.tsx     # Profile tab
+└── [newflow]/          # Additional flows as needed
+```
+
+### **When to Create New Flow Groups**
+#### ✅ CREATE a new `(flow)` group for:
+- **Distinct user journeys** (Authentication, Onboarding, Checkout, etc.)
+- **Feature groups** with 3+ related screens
+- **Self-contained workflows** with clear entry/exit points
+- **Different user types** (Admin, Customer, Guest flows)
+
+#### ❌ KEEP in existing groups when:
+- **Single screens** without related screens
+- **Minor variations** of existing flows
+- **Settings/preferences** (usually part of tabs)
+
+---
+
+## 📝 Screen File Template
+
+### **Standard Screen Structure**
+
+```typescript
+/**
+ * [SCREEN NAME] - [Brief Description]
+ * 
+ * [Detailed description of what this screen does and its role in the app]
+ * 
+ * @purpose
+ * - Primary purpose of this screen
+ * - Key functionality it provides
+ * - User goals it helps achieve
+ * 
+ * @navigation
+ * - How users reach this screen
+ * - Where users can go from here
+ * - Back navigation behavior
+ * 
+ * @features
+ * - Key feature 1
+ * - Key feature 2
+ * - Key feature 3
+ * 
+ * @stateManagement
+ * - What state this screen manages
+ * - External dependencies
+ * - Data sources
+ * 
+ * @forNoviceDevelopers
+ * - Simple explanation of complex concepts
+ * - Common patterns used
+ * - Areas for customization
+ */
+
+import React from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Colors, Fonts, ButtonStyles } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { ApiService } from '@/utils/apiService';
+import { UserManager } from '@/utils/userManager';
+
+// MARK: - Types & Interfaces
+
+interface ScreenState {
+  loading: boolean;
+  error: string | null;
+  data: any | null;
+}
+
+// MARK: - Screen Component
+
+/**
+ * [ScreenName] - [Brief description]
+ * 
+ * A screen that [detailed description of functionality].
+ * Follows Expo Router conventions and integrates with the app's services.
+ */
+export default function ScreenName() {
+  // MARK: - Hooks
+  
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  
+  // MARK: - State
+  
+  const [state, setState] = React.useState<ScreenState>({
+    loading: false,
+    error: null,
+    data: null,
+  });
+  
+  const [localUIState, setLocalUIState] = React.useState({
+    selectedTab: 0,
+    isExpanded: false,
+  });
+  
+  // MARK: - Effects
+  
+  React.useEffect(() => {
+    loadInitialData();
+    
+    // Cleanup function
+    return () => {
+      // Cancel any ongoing requests
+      // Cleanup subscriptions
+    };
+  }, []);
+  
+  // Focus effect for when screen comes into focus
+  React.useEffect(() => {
+    const unsubscribe = router.addListener?.('focus', () => {
+      // Screen came into focus
+      handleScreenFocus();
+    });
+    
+    return unsubscribe;
+  }, []);
+  
+  // MARK: - Data Loading
+  
+  const loadInitialData = React.useCallback(async () => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const response = await ApiService.get('/endpoint');
+      setState(prev => ({ 
+        ...prev, 
+        loading: false, 
+        data: response.data 
+      }));
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: error.message || 'An error occurred' 
+      }));
+    }
+  }, []);
+  
+  // MARK: - Event Handlers
+  
+  const handleScreenFocus = React.useCallback(() => {
+    // Handle screen focus events
+    // Refresh data if needed
+    // Update user analytics
+  }, []);
+  
+  const handlePrimaryAction = React.useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true }));
+      
+      // Perform primary action
+      const result = await ApiService.post('/action', { data: 'value' });
+      
+      // Navigate to next screen or show success
+      router.push('/next-screen');
+      
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Action failed');
+    } finally {
+      setState(prev => ({ ...prev, loading: false }));
+    }
+  }, []);
+  
+  const handleSecondaryAction = React.useCallback(() => {
+    // Handle secondary action
+    setLocalUIState(prev => ({ ...prev, isExpanded: !prev.isExpanded }));
+  }, []);
+  
+  const handleNavigation = React.useCallback((destination: string) => {
+    router.push(destination);
+  }, []);
+  
+  const handleBack = React.useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  }, []);
+  
+  // MARK: - Computed Values
+  
+  const containerStyle = React.useMemo(() => [
+    styles.container,
+    { backgroundColor: colors.backgroundPrimary },
+  ], [colors.backgroundPrimary]);
+  
+  // MARK: - Render Helpers
+  
+  const renderHeader = React.useCallback(() => (
+    <View style={styles.header}>
+      <Text style={[Fonts.displayMedium, { color: colors.textPrimary }]}>
+        Screen Title
+      </Text>
+      <Text style={[Fonts.bodyMedium, { color: colors.textSecondary }]}>
+        Subtitle or description text that explains the screen's purpose
+      </Text>
+    </View>
+  ), [colors.textPrimary, colors.textSecondary]);
+  
+  const renderContent = React.useCallback(() => {
+    if (state.loading) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={[Fonts.bodyMedium, { color: colors.textSecondary }]}>
+            Loading...
+          </Text>
+        </View>
+      );
+    }
+    
+    if (state.error) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={[Fonts.bodyMedium, { color: colors.error }]}>
+            {state.error}
+          </Text>
+          <TouchableOpacity
+            style={[ButtonStyles.secondary, { marginTop: 16 }]}
+            onPress={loadInitialData}
+          >
+            <Text style={ButtonStyles.secondaryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
+    // Main content
+    return (
+      <View style={styles.content}>
+        {/* Screen-specific content */}
+        <Text style={[Fonts.bodyLarge, { color: colors.textPrimary }]}>
+          Main content goes here
+        </Text>
+      </View>
+    );
+  }, [state, colors, loadInitialData]);
+  
+  const renderFooter = React.useCallback(() => (
+    <View style={styles.footer}>
+      <TouchableOpacity
+        style={ButtonStyles.primary}
+        onPress={handlePrimaryAction}
+        disabled={state.loading}
+        accessibilityRole="button"
+        accessibilityLabel="Primary action"
+      >
+        <Text style={ButtonStyles.primaryText}>
+          {state.loading ? 'Loading...' : 'Primary Action'}
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[ButtonStyles.secondary, { marginTop: 12 }]}
+        onPress={handleSecondaryAction}
+        accessibilityRole="button"
+        accessibilityLabel="Secondary action"
+      >
+        <Text style={ButtonStyles.secondaryText}>Secondary Action</Text>
+      </TouchableOpacity>
+    </View>
+  ), [state.loading, handlePrimaryAction, handleSecondaryAction]);
+  
+  // MARK: - Main Render
+  
+  return (
+    <SafeAreaView style={containerStyle}>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {renderHeader()}
+        {renderContent()}
+      </ScrollView>
+      
+      {renderFooter()}
+    </SafeAreaView>
+  );
+}
+
+// MARK: - Styles
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 32,
+    alignItems: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingVertical: 20,
+  },
+  footer: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+```
+
+---
+
+## 🧭 Navigation Patterns
+
+### **Expo Router Navigation**
+```typescript
+import { router } from 'expo-router';
+
+// ✅ Navigate to specific routes
+router.push('/onboarding/welcome');
+router.replace('/tabs/');
+router.back();
+
+// ✅ Navigate with parameters
+router.push({
+  pathname: '/profile/[id]',
+  params: { id: '123' }
+});
+
+// ✅ Check if can go back
+if (router.canGoBack()) {
+  router.back();
+} else {
+  router.replace('/');
+}
+```
+
+### **Layout Configuration**
+```typescript
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+    </Stack>
+  );
+}
+```
+
+---
+
+## 🎨 Screen Design Principles
+
+### **1. Consistent Layout Structure**
+```typescript
+// ✅ Standard screen layout
+<SafeAreaView style={{ flex: 1 }}>
+  <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
+    {/* Header Section */}
+    <View style={{ marginBottom: 32 }}>
+      <Text>Title</Text>
+      <Text>Subtitle</Text>
+    </View>
+
+    {/* Main Content */}
+    <View style={{ flex: 1 }}>
+      {/* Content */}
+    </View>
+  </ScrollView>
+
+  {/* Footer Actions */}
+  <View style={{ padding: 24 }}>
+    {/* Actions */}
+  </View>
+</SafeAreaView>
+```
+
+### **2. Theme Integration**
+```typescript
+// ✅ Use theme system consistently
+const colorScheme = useColorScheme();
+const colors = Colors[colorScheme ?? 'light'];
+
+<View style={{ backgroundColor: colors.backgroundPrimary }}>
+  <Text style={[Fonts.displayMedium, { color: colors.textPrimary }]}>
+    Title
+  </Text>
+</View>
+```
+
+### **3. Loading and Error States**
+```typescript
+// ✅ Handle all screen states
+if (loading) {
+  return <LoadingSpinner />;
+}
+
+if (error) {
+  return <ErrorView error={error} onRetry={handleRetry} />;
+}
+
+// Main content
+return <MainContent />;
+```
+
+---
+
+## 📱 Screen Types & Templates
+
+### **Onboarding Screens**
+```typescript
+// Features: Progress indicators, skip functionality, clear CTAs
+export default function OnboardingScreen() {
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Progress indicator */}
+      <View style={styles.progress}>
+        <ProgressBar current={1} total={3} />
+      </View>
+      
+      {/* Content */}
+      <ScrollView contentContainerStyle={styles.content}>
+        <Image source={illustration} style={styles.illustration} />
+        <Text style={styles.title}>Welcome!</Text>
+        <Text style={styles.description}>Description</Text>
+      </ScrollView>
+      
+      {/* Actions */}
+      <View style={styles.actions}>
+        <TouchableOpacity style={ButtonStyles.primary}>
+          <Text style={ButtonStyles.primaryText}>Continue</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)/')}>
+          <Text style={styles.skipText}>Skip</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+```
+
+### **List/Feed Screens**
+```typescript
+// Features: Pull-to-refresh, infinite scroll, empty states
+export default function ListScreen() {
+  const [data, setData] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, []);
+  
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={data}
+        renderItem={({ item }) => <ListItem item={item} />}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        ListEmptyComponent={<EmptyState />}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
+  );
+}
+```
+
+### **Form Screens**
+```typescript
+// Features: Validation, keyboard handling, submission states
+export default function FormScreen() {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+  });
+  const [errors, setErrors] = useState({});
+  
+  return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView keyboardShouldPersistTaps="handled">
+        <TextInput
+          placeholder="Name"
+          value={form.name}
+          onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
+          style={styles.input}
+        />
+        {errors.name && <Text style={styles.error}>{errors.name}</Text>}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+```
+
+---
+
+## 🔄 Screen Lifecycle Management
+
+### **Effect Patterns**
+```typescript
+// ✅ Screen focus/blur handling
+useFocusEffect(
+  useCallback(() => {
+    // Screen focused
+    loadData();
+    
+    return () => {
+      // Screen unfocused - cleanup
+      cancelRequests();
+    };
+  }, [])
+);
+
+// ✅ Deep link handling
+useEffect(() => {
+  const url = Linking.getInitialURL();
+  if (url) {
+    handleDeepLink(url);
+  }
+}, []);
+```
+
+### **State Persistence**
+```typescript
+// ✅ Save screen state
+useEffect(() => {
+  const saveState = async () => {
+    await AsyncStorage.setItem('screenState', JSON.stringify(state));
+  };
+  
+  saveState();
+}, [state]);
+```
+
+---
+
+## ♿ Accessibility Guidelines
+
+### **Screen Reader Support**
+```typescript
+// ✅ Proper accessibility structure
+<View accessibilityRole="main">
+  <Text accessibilityRole="header" accessibilityLevel={1}>
+    Screen Title
+  </Text>
+  
+  <TouchableOpacity
+    accessibilityRole="button"
+    accessibilityLabel="Continue to next step"
+    accessibilityHint="Navigates to the main application"
+  >
+    <Text>Continue</Text>
+  </TouchableOpacity>
+</View>
+```
+
+### **Focus Management**
+```typescript
+// ✅ Auto-focus important elements
+const titleRef = useRef(null);
+
+useEffect(() => {
+  // Focus title when screen loads
+  titleRef.current?.focus();
+}, []);
+```
+
+---
+
+## 🚀 Performance Optimization
+
+### **Screen-Level Optimization**
+```typescript
+// ✅ Lazy loading and code splitting
+const LazyComponent = React.lazy(() => import('./LazyComponent'));
+
+// ✅ Memoized computed values
+const computedData = useMemo(() => {
+  return processData(rawData);
+}, [rawData]);
+
+// ✅ Debounced search
+const debouncedSearch = useMemo(
+  () => debounce(performSearch, 300),
+  []
+);
+```
+
+### **Memory Management**
+```typescript
+// ✅ Cleanup on unmount
+useEffect(() => {
+  return () => {
+    // Cancel network requests
+    // Clear timers
+    // Unsubscribe from events
+  };
+}, []);
+```
+
+---
+
+## 🧪 Testing Screens
+
+### **Screen Testing Template**
+```typescript
+// ScreenName.test.tsx
+import React from 'react';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import ScreenName from './ScreenName';
+
+// Mock navigation
+jest.mock('expo-router', () => ({
+  router: {
+    push: jest.fn(),
+    back: jest.fn(),
+    replace: jest.fn(),
+  },
+}));
+
+describe('ScreenName', () => {
+  it('renders correctly', () => {
+    const { getByText } = render(<ScreenName />);
+    expect(getByText('Screen Title')).toBeTruthy();
+  });
+  
+  it('handles user interactions', async () => {
+    const { getByRole } = render(<ScreenName />);
+    
+    fireEvent.press(getByRole('button', { name: /primary action/i }));
+    
+    await waitFor(() => {
+      // Assert expected behavior
+    });
+  });
+  
+  it('handles error states', () => {
+    // Test error scenarios
+  });
+});
+```
+
+---
+
+## 📚 Screen Documentation
+
+### **Required Documentation**
+1. **Screen purpose** and user goals
+2. **Navigation flow** and entry/exit points
+3. **State management** approach
+4. **API integrations** and data dependencies
+5. **Accessibility features** implemented
+6. **Platform considerations** (if any)
+
+### **Screen Checklist**
+- [ ] **Navigation**: Proper Expo Router integration
+- [ ] **Theme**: Uses design system consistently
+- [ ] **State**: Proper loading/error/success states
+- [ ] **Accessibility**: Screen reader and interaction support
+- [ ] **Performance**: Optimized rendering and data loading
+- [ ] **Testing**: Unit tests for key functionality
+- [ ] **Documentation**: Clear purpose and usage
+- [ ] **Error Handling**: Graceful error recovery
+
+---
+
+## 🌟 Best Practices Summary
+
+1. **Expo Router First** - Follow file-based routing conventions
+2. **Theme Integration** - Use design system consistently
+3. **State Management** - Handle loading, error, and success states
+4. **Accessibility** - Support all users from day one
+5. **Performance** - Optimize for smooth interactions
+6. **Error Handling** - Graceful recovery from failures
+7. **Testing** - Cover critical user interactions
+8. **Documentation** - Clear purpose and navigation flow
+
+Remember: Screens are the user's primary interaction points. Make them intuitive, accessible, and performant!

@@ -1,0 +1,494 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Expo Boilerplate Component Rules
+
+## 🏗️ Component Architecture Guidelines
+
+### **When to Create Components**
+
+#### ✅ CREATE a separate component for:
+- **Reusable UI elements** used in 2+ places
+- **Complex views** with 50+ lines of code
+- **Self-contained functionality** (forms, cards, lists)
+- **Stateful UI elements** with their own logic
+- **Custom controls** and interactive elements
+- **Data-driven components** (user profiles, product cards)
+- **Platform-specific variations** requiring conditional rendering
+
+#### ❌ KEEP inline when:
+- **Simple, one-off elements** used only once
+- **Basic containers** with minimal logic
+- **Layout helpers** under 20 lines
+- **Trivial UI elements** (basic text, spacers)
+- **Screen-specific UI** that won't be reused
+
+### **Component Organization Structure**
+
+```
+components/
+├── ui/              # Basic UI building blocks
+├── onboarding/      # Onboarding flow components
+├── main/           # Main app components
+├── [FlowName]/     # Flow-specific components
+└── shared/         # Cross-flow shared components
+```
+
+#### **Folder Guidelines:**
+- **ui/**: Buttons, inputs, modals, loading indicators, basic building blocks
+- **Flow-specific/**: Components used only within that specific flow
+- **shared/**: Cross-flow components (e.g., used in both Main and Settings)
+
+---
+
+## 📝 Component File Template
+
+### **Standard Component Structure**
+
+```typescript
+/**
+ * [COMPONENT NAME] - [Brief Description]
+ * 
+ * [Detailed description of what this component does]
+ * 
+ * @example
+ * <ComponentName
+ *   title="Example Title"
+ *   onPress={() => console.log('Pressed')}
+ *   variant="primary"
+ * />
+ * 
+ * @features
+ * - Feature 1: Description
+ * - Feature 2: Description  
+ * - Feature 3: Description
+ * 
+ * @customization
+ * - How to customize appearance
+ * - How to modify behavior
+ * - Available style overrides
+ */
+
+import React from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet,
+  ViewStyle,
+  TextStyle 
+} from 'react-native';
+import { Colors, Fonts, ButtonStyles } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+// MARK: - Types & Interfaces
+
+interface ComponentNameProps {
+  /** Required property description */
+  title: string;
+  
+  /** Optional property with default description */
+  variant?: 'primary' | 'secondary' | 'tertiary';
+  
+  /** Callback property description */
+  onPress?: () => void;
+  
+  /** Style override for container */
+  style?: ViewStyle;
+  
+  /** Style override for text */
+  textStyle?: TextStyle;
+  
+  /** Whether component is disabled */
+  disabled?: boolean;
+  
+  /** Loading state */
+  loading?: boolean;
+  
+  /** Children components */
+  children?: React.ReactNode;
+}
+
+// MARK: - Component
+
+/**
+ * [ComponentName] - [Brief description]
+ * 
+ * A reusable component that [detailed description of functionality].
+ * Follows the app's design system and supports both light and dark themes.
+ */
+export default function ComponentName({
+  title,
+  variant = 'primary',
+  onPress,
+  style,
+  textStyle,
+  disabled = false,
+  loading = false,
+  children,
+}: ComponentNameProps) {
+  // MARK: - Hooks
+  
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  
+  // MARK: - State
+  
+  const [internalState, setInternalState] = React.useState<boolean>(false);
+  
+  // MARK: - Effects
+  
+  React.useEffect(() => {
+    // Side effects, subscriptions, etc.
+    return () => {
+      // Cleanup
+    };
+  }, []);
+  
+  // MARK: - Handlers
+  
+  const handlePress = React.useCallback(() => {
+    if (disabled || loading) return;
+    
+    // Internal logic
+    setInternalState(!internalState);
+    
+    // Call external callback
+    onPress?.();
+  }, [disabled, loading, internalState, onPress]);
+  
+  // MARK: - Computed Values
+  
+  const containerStyle = React.useMemo(() => [
+    styles.container,
+    variant === 'primary' && styles.primaryContainer,
+    variant === 'secondary' && styles.secondaryContainer,
+    disabled && styles.disabledContainer,
+    { backgroundColor: colors.backgroundPrimary },
+    style,
+  ], [variant, disabled, colors.backgroundPrimary, style]);
+  
+  const titleStyle = React.useMemo(() => [
+    Fonts.buttonMedium,
+    { color: colors.textPrimary },
+    variant === 'primary' && { color: '#FFFFFF' },
+    disabled && { opacity: 0.6 },
+    textStyle,
+  ], [variant, disabled, colors.textPrimary, textStyle]);
+  
+  // MARK: - Render
+  
+  return (
+    <TouchableOpacity
+      style={containerStyle}
+      onPress={handlePress}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading }}
+      accessibilityHint="Double tap to activate"
+    >
+      {loading ? (
+        <Text style={titleStyle}>Loading...</Text>
+      ) : (
+        <>
+          <Text style={titleStyle}>{title}</Text>
+          {children}
+        </>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// MARK: - Convenience Components
+
+/**
+ * Convenience component for primary variant
+ */
+export function PrimaryComponentName(props: Omit<ComponentNameProps, 'variant'>) {
+  return <ComponentName {...props} variant="primary" />;
+}
+
+/**
+ * Convenience component for secondary variant
+ */
+export function SecondaryComponentName(props: Omit<ComponentNameProps, 'variant'>) {
+  return <ComponentName {...props} variant="secondary" />;
+}
+
+// MARK: - Styles
+
+const styles = StyleSheet.create({
+  container: {
+    height: 50,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  primaryContainer: {
+    backgroundColor: Colors.light.primary,
+    shadowColor: Colors.light.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  secondaryContainer: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+  },
+  disabledContainer: {
+    opacity: 0.6,
+  },
+});
+
+// MARK: - Export Types
+
+export type { ComponentNameProps };
+```
+
+---
+
+## 🎨 Component Design Principles
+
+### **1. Theme System Integration**
+```typescript
+// ✅ ALWAYS use theme system
+import { Colors, Fonts, ButtonStyles } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+const colorScheme = useColorScheme();
+const colors = Colors[colorScheme ?? 'light'];
+
+<Text style={[Fonts.titleLarge, { color: colors.textPrimary }]}>
+  Title
+</Text>
+
+// ❌ NEVER hard-code styles
+<Text style={{ fontSize: 24, color: '#000000' }}>
+  Title
+</Text>
+```
+
+### **2. Accessibility First**
+```typescript
+// ✅ Include accessibility support
+<TouchableOpacity
+  accessibilityRole="button"
+  accessibilityLabel="Descriptive label"
+  accessibilityHint="What happens when activated"
+  accessibilityState={{ disabled: isDisabled }}
+>
+  <Text>Button Text</Text>
+</TouchableOpacity>
+```
+
+### **3. TypeScript Integration**
+```typescript
+// ✅ Define comprehensive interfaces
+interface ComponentProps {
+  title: string;
+  onPress?: () => void;
+  variant?: 'primary' | 'secondary';
+  style?: ViewStyle;
+  children?: React.ReactNode;
+}
+
+// ✅ Export types for reuse
+export type { ComponentProps };
+```
+
+### **4. Performance Optimization**
+```typescript
+// ✅ Use React.memo for expensive components
+export default React.memo(ComponentName);
+
+// ✅ Use useMemo for computed styles
+const containerStyle = React.useMemo(() => [
+  styles.container,
+  { backgroundColor: colors.primary },
+  style,
+], [colors.primary, style]);
+
+// ✅ Use useCallback for handlers
+const handlePress = React.useCallback(() => {
+  onPress?.();
+}, [onPress]);
+```
+
+### **5. Error Boundaries**
+```typescript
+// ✅ Wrap complex components in error boundaries
+import { ErrorBoundary } from 'react-error-boundary';
+
+<ErrorBoundary fallback={<ErrorFallback />}>
+  <ComplexComponent />
+</ErrorBoundary>
+```
+
+---
+
+## 📱 Platform Considerations
+
+### **Cross-Platform Styling**
+```typescript
+import { Platform, StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  container: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+});
+```
+
+### **Safe Area Handling**
+```typescript
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export default function Component() {
+  const insets = useSafeAreaInsets();
+  
+  return (
+    <View style={{ paddingTop: insets.top }}>
+      {/* Content */}
+    </View>
+  );
+}
+```
+
+---
+
+## 🧪 Testing & Quality
+
+### **Component Testing Template**
+```typescript
+// ComponentName.test.tsx
+import React from 'react';
+import { render, fireEvent } from '@testing-library/react-native';
+import ComponentName from './ComponentName';
+
+describe('ComponentName', () => {
+  it('renders correctly', () => {
+    const { getByText } = render(
+      <ComponentName title="Test Title" />
+    );
+    
+    expect(getByText('Test Title')).toBeTruthy();
+  });
+  
+  it('handles press events', () => {
+    const mockPress = jest.fn();
+    const { getByRole } = render(
+      <ComponentName title="Test" onPress={mockPress} />
+    );
+    
+    fireEvent.press(getByRole('button'));
+    expect(mockPress).toHaveBeenCalled();
+  });
+  
+  it('supports accessibility', () => {
+    const { getByRole } = render(
+      <ComponentName title="Test" />
+    );
+    
+    const button = getByRole('button');
+    expect(button).toHaveAccessibilityRole('button');
+  });
+});
+```
+
+### **Quality Checklist**
+- [ ] **TypeScript**: Full type coverage
+- [ ] **Accessibility**: Proper roles and labels
+- [ ] **Theme Integration**: Uses design system
+- [ ] **Performance**: Optimized with memo/useMemo/useCallback
+- [ ] **Testing**: Unit tests covering key functionality
+- [ ] **Documentation**: Comprehensive JSDoc comments
+- [ ] **Error Handling**: Graceful error states
+- [ ] **Platform Support**: Works on iOS and Android
+
+---
+
+## 🔄 Component Lifecycle
+
+### **State Management Patterns**
+```typescript
+// ✅ Local state for component-specific data
+const [isExpanded, setIsExpanded] = useState(false);
+
+// ✅ Props for external control
+interface Props {
+  isVisible: boolean;
+  onVisibilityChange: (visible: boolean) => void;
+}
+
+// ✅ Context for app-wide state
+const theme = useContext(ThemeContext);
+```
+
+### **Effect Management**
+```typescript
+// ✅ Cleanup subscriptions and timers
+useEffect(() => {
+  const subscription = eventEmitter.subscribe('event', handler);
+  
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+```
+
+---
+
+## 📚 Documentation Standards
+
+### **Required Documentation**
+1. **Component purpose** and use cases
+2. **Props interface** with descriptions
+3. **Usage examples** with code samples
+4. **Accessibility features** and considerations
+5. **Platform-specific** behaviors (if any)
+6. **Performance** characteristics and optimizations
+
+### **JSDoc Template**
+```typescript
+/**
+ * Component description
+ * 
+ * @param props - Component props
+ * @param props.title - The display title
+ * @param props.onPress - Callback for press events
+ * @returns JSX element
+ */
+```
+
+---
+
+## 🌟 Best Practices Summary
+
+1. **Theme First** - Always use the design system
+2. **TypeScript Everywhere** - Type all props and state
+3. **Accessibility by Default** - Include proper ARIA attributes
+4. **Performance Conscious** - Optimize with React patterns
+5. **Test Thoroughly** - Unit tests for all components
+6. **Document Completely** - Help future developers
+7. **Handle Errors** - Graceful fallbacks and boundaries
+8. **Platform Aware** - Consider iOS and Android differences
+
+Remember: Components are the building blocks of your app. Invest time in making them robust, reusable, and well-documented!

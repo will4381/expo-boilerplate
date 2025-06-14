@@ -1,0 +1,296 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Expo Boilerplate Rules
+
+## 🎯 **Master Guidelines for Consistent React Native Development**
+
+This document serves as the comprehensive entry point for the Expo Boilerplate project rules. These rules ensure consistency, maintainability, and quality across all aspects of React Native app development while remaining flexible for different implementations.
+
+---
+
+## 🏗️ **Architecture Overview**
+
+### **Project Structure**
+```
+Expo-Boilerplate/
+├── app/                # Expo Router navigation structure
+│   ├── (onboarding)/  # Onboarding flow screens
+│   ├── (tabs)/        # Main app tab navigation
+│   ├── _layout.tsx    # Root layout configuration
+│   ├── splashView.tsx # Initial splash screen
+│   └── +not-found.tsx # 404 error handling
+├── components/        # Reusable UI components
+│   ├── ui/           # Basic UI building blocks
+│   ├── onboarding/   # Onboarding-specific components
+│   ├── main/         # Main app components
+│   └── shared/       # Cross-flow shared components
+├── constants/        # Theme system and configuration
+│   ├── Colors.ts     # Color palette and themes
+│   ├── Fonts.ts      # Typography system
+│   └── ButtonStyles.ts # Button style definitions
+├── utils/            # Core services and utilities
+│   ├── apiService.ts      # HTTP client and API calls
+│   ├── userManager.ts     # User state management
+│   ├── notificationManager.ts # Push notifications
+│   ├── superwallService.ts    # Paywall monetization
+│   └── eventEmitter.ts        # Event communication
+├── hooks/            # Custom React hooks
+└── assets/          # Images, fonts, and static files
+```
+
+### **Core Principles**
+1. **Theme-First Design** - All UI must use the theme system
+2. **Expo Router Navigation** - File-based routing structure
+3. **Component Reusability** - Extract reusable elements
+4. **Service Integration** - Leverage built-in utilities
+5. **TypeScript Everywhere** - Type safety and developer experience
+6. **Accessibility by Default** - Support all users
+7. **Documentation-Driven** - Code should be self-explanatory
+
+---
+
+## 📚 **Detailed Rule Categories**
+
+This boilerplate includes four comprehensive rule documents that cover every aspect of development:
+
+### **🧩 Component Development (`component-rules.mdc`)**
+Comprehensive guidelines for creating reusable, accessible, and performant React Native components.
+
+**Key Topics Covered:**
+- Component architecture decisions (when to create vs. keep inline)
+- TypeScript interface definitions and prop management
+- Theme system integration patterns
+- Performance optimization with React.memo, useMemo, useCallback
+- Accessibility implementation and testing
+- Platform-specific considerations
+- Component testing strategies
+- Documentation standards and templates
+
+**Quick Reference:**
+- Create components for 2+ use cases or 50+ lines
+- Always use TypeScript interfaces for props
+- Integrate with theme system (Colors, Fonts, ButtonStyles)
+- Include proper accessibility roles and labels
+- Test on both iOS and Android platforms
+
+### **📱 Screen/View Development (`view-rules.mdc`)**
+Guidelines for building screens using Expo Router with consistent patterns and user experience.
+
+**Key Topics Covered:**
+- Expo Router file-based navigation structure
+- Screen organization and flow grouping patterns
+- Navigation patterns and lifecycle management
+- State management and data loading strategies
+- Error handling and loading states
+- Accessibility and screen reader support
+- Performance optimization and memory management
+- Testing screens and user interactions
+
+**Quick Reference:**
+- Use `(groupName)` folders for related screens
+- Follow standard screen template structure
+- Handle loading, error, and success states
+- Implement proper accessibility roles
+- Use SafeAreaView and proper scroll handling
+
+### **🔧 Utility Services (`util-rules.mdc`)**
+Complete documentation for the four core utility services that power the app's backend functionality.
+
+**Key Topics Covered:**
+- **ApiService**: HTTP client, authentication, offline support
+- **UserManager**: User state, authentication, preferences
+- **NotificationManager**: Push notifications, engagement campaigns
+- **SuperwallService**: Paywall monetization, subscription management
+- **EventEmitter**: Cross-component communication
+- Service integration patterns and error recovery
+- Testing and mocking strategies
+- Security considerations and best practices
+
+**Quick Reference:**
+- Configure all services at app startup
+- Use EventEmitter for cross-service communication
+- Implement proper error handling and retry logic
+- Mock services in tests for reliable testing
+- Follow security best practices for sensitive data
+
+### **🎨 Theme System (`theme-rules.mdc`)**
+Complete design system documentation covering Colors, Fonts, and ButtonStyles for consistent UI.
+
+**Key Topics Covered:**
+- Color palette with light/dark mode support
+- Typography hierarchy and font weight system
+- Button styles with accessibility compliance
+- Theme integration patterns and custom hooks
+- Performance considerations and optimization
+- Accessibility standards and contrast testing
+- Cross-platform styling considerations
+- Testing theme implementations
+
+**Quick Reference:**
+- Always use semantic color names (`.textPrimary` vs hex values)
+- Follow typography hierarchy for content importance
+- Test both light and dark modes thoroughly
+- Ensure 4.5:1 contrast ratio for accessibility
+- Use provided ButtonStyles for consistent interactions
+
+---
+
+## 🎨 **Design System Quick Reference**
+
+### **Essential Theme Usage**
+```typescript
+// ✅ Standard theme integration
+import { Colors, Fonts, ButtonStyles } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+const colorScheme = useColorScheme();
+const colors = Colors[colorScheme ?? 'light'];
+
+// Text with theme
+<Text style={[Fonts.titleLarge, { color: colors.textPrimary }]}>
+  Themed Title
+</Text>
+
+// Button with theme
+<TouchableOpacity style={ButtonStyles.primary}>
+  <Text style={ButtonStyles.primaryText}>Action</Text>
+</TouchableOpacity>
+
+// Container with theme
+<View style={{ backgroundColor: colors.backgroundPrimary }}>
+  {/* Content */}
+</View>
+```
+
+### **Required Design Patterns**
+- **Colors**: Use semantic names with light/dark support
+- **Fonts**: Follow typography hierarchy (Display → Title → Body → Caption)
+- **Buttons**: Use predefined styles with proper accessibility
+- **Spacing**: Consistent 8pt grid system (16, 20, 24, 40)
+- **Accessibility**: 4.5:1 contrast ratio, proper touch targets (44pt minimum)
+
+---
+
+## 🚀 **Development Workflow**
+
+### **Starting a New Feature**
+1. **Plan Architecture** - Determine if new screens/components needed
+2. **Check Existing Patterns** - Reuse components and follow established patterns
+3. **Use Theme System** - Integrate with Colors, Fonts, ButtonStyles
+4. **Follow Expo Router** - Use file-based navigation conventions
+5. **Integrate Services** - Leverage ApiService, UserManager, etc.
+6. **Implement Accessibility** - Include proper roles and labels
+7. **Test Thoroughly** - Cover different states and edge cases
+8. **Document Code** - Add comprehensive comments and examples
+
+### **Code Review Checklist**
+- [ ] **Architecture**: Follows established patterns and conventions
+- [ ] **Theme Integration**: Uses design system consistently
+- [ ] **TypeScript**: Proper typing throughout with no `any` types
+- [ ] **Accessibility**: Includes proper roles, labels, and contrast
+- [ ] **Navigation**: Follows Expo Router conventions
+- [ ] **Error Handling**: Graceful handling of all error states
+- [ ] **Performance**: Optimized with React patterns (memo, useMemo, useCallback)
+- [ ] **Testing**: Unit tests for critical functionality
+- [ ] **Documentation**: Clear comments and usage examples
+
+### **Quality Standards**
+- **Component Complexity**: Keep under 100 lines when possible
+- **Reusability**: Extract components used 2+ times
+- **Documentation**: All public APIs and complex logic documented
+- **TypeScript Coverage**: 100% typed code with strict mode
+- **Accessibility**: WCAG AA compliance with proper testing
+- **Performance**: Smooth 60fps interactions on target devices
+
+---
+
+## 🌟 **Best Practices Summary**
+
+### **The Big 10 Rules**
+1. **Theme First** - Always use the design system components
+2. **TypeScript Everywhere** - Type safety and developer experience
+3. **Expo Router Navigation** - Follow file-based routing patterns
+4. **Component Reusability** - Build maintainable, documented components
+5. **Service Integration** - Leverage the built-in utility services
+6. **Accessibility by Default** - Support all users from day one
+7. **Performance Conscious** - Optimize for smooth mobile experience
+8. **Error Handling** - Graceful recovery from all failure scenarios
+9. **Testing Comprehensive** - Cover critical paths and edge cases
+10. **Documentation Driven** - Help future developers (including yourself)
+
+### **For New Team Members**
+1. **Read all rule documents** - Understand the complete system
+2. **Study existing code** - See patterns in action
+3. **Start with small tasks** - Build familiarity with conventions
+4. **Ask questions early** - Consistency is crucial for team success
+5. **Contribute improvements** - Help evolve and refine the rules
+
+### **When in Doubt**
+- **Prioritize user experience** - Always consider the end user impact
+- **Choose consistency** - Follow established patterns over innovation
+- **Favor maintainability** - Code will be read more than written
+- **Ask the team** - Collective knowledge improves everyone
+
+---
+
+## 📖 **Reference Documentation**
+
+### **Core Rule Documents**
+- **`component-rules.mdc`** - Component development guidelines
+- **`view-rules.mdc`** - Screen/view architecture standards  
+- **`util-rules.mdc`** - Service integration documentation
+- **`theme-rules.mdc`** - Design system implementation
+
+### **External Resources**
+- **Expo Router Documentation** - Navigation patterns and best practices
+- **React Native Documentation** - Platform-specific implementation details
+- **TypeScript Handbook** - Type system patterns and advanced features
+- **WCAG Guidelines** - Accessibility standards and compliance
+- **React Documentation** - Hooks, patterns, and performance optimization
+
+---
+
+## 🎯 **Quality Assurance**
+
+### **Definition of Done**
+A feature is complete when it:
+- [ ] Follows all architectural patterns and conventions
+- [ ] Uses theme system consistently across all UI elements
+- [ ] Includes comprehensive TypeScript typing
+- [ ] Has thorough documentation with usage examples
+- [ ] Supports accessibility requirements (WCAG AA)
+- [ ] Handles all error states gracefully
+- [ ] Integrates properly with utility services
+- [ ] Passes performance benchmarks (60fps)
+- [ ] Works correctly in both light and dark modes
+- [ ] Supports different screen sizes and orientations
+- [ ] Follows Expo Router navigation conventions
+- [ ] Includes unit tests for critical functionality
+
+### **Continuous Improvement**
+- **Regular rule reviews** - Update patterns as the app evolves
+- **Team feedback sessions** - Incorporate developer experience improvements
+- **Performance monitoring** - Ensure standards maintain app quality
+- **Accessibility audits** - Regular compliance verification
+- **Documentation updates** - Keep examples current and accurate
+
+---
+
+> **Remember**: This boilerplate provides a solid foundation while remaining flexible for different app implementations. These rules ensure consistency and quality while allowing for customization based on specific app requirements. When in doubt, prioritize user experience, code clarity, and maintainability!
+
+## 🚀 **Getting Started**
+
+For developers new to this boilerplate:
+
+1. **Read this master document** - Understand the overall approach
+2. **Study the theme system** - Master Colors, Fonts, and ButtonStyles
+3. **Review component patterns** - Learn reusability and architecture decisions
+4. **Understand screen organization** - Master Expo Router and navigation
+5. **Explore utility services** - Leverage ApiService, UserManager, etc.
+6. **Practice with examples** - Build small features following the patterns
+7. **Contribute improvements** - Help make the boilerplate even better
+
+This boilerplate is designed to make React Native development faster, more consistent, and more enjoyable for developers of all skill levels. Welcome to the team! 🎉

@@ -1,0 +1,609 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Expo Boilerplate Rules
+
+## 🎯 **Master Guidelines for Consistent React Native Development**
+
+This document serves as the comprehensive rulebook for the Expo Boilerplate project. These rules ensure consistency, maintainability, and quality across all aspects of React Native app development while remaining flexible for different implementations.
+
+---
+
+## 🏗️ **Architecture Overview**
+
+### **Project Structure**
+```
+Expo-Boilerplate/
+├── app/                # Expo Router navigation structure
+│   ├── (onboarding)/  # Onboarding flow screens
+│   ├── (tabs)/        # Main app tab navigation
+│   ├── _layout.tsx    # Root layout configuration
+│   ├── splashView.tsx # Initial splash screen
+│   └── +not-found.tsx # 404 error handling
+├── components/        # Reusable UI components
+│   ├── ui/           # Basic UI components
+│   ├── onboarding/   # Onboarding-specific components
+│   ├── main/         # Main app components
+│   └── [FlowName]/   # Flow-specific components
+├── constants/        # Theme system and configuration
+│   ├── Colors.ts     # Color palette and themes
+│   ├── Fonts.ts      # Typography system
+│   └── ButtonStyles.ts # Button style definitions
+├── utils/            # Core services and utilities
+│   ├── apiService.ts      # HTTP client and API calls
+│   ├── userManager.ts     # User state management
+│   ├── notificationManager.ts # Push notifications
+│   ├── superwallService.ts    # Paywall monetization
+│   └── eventEmitter.ts        # Event communication
+├── hooks/            # Custom React hooks
+└── assets/          # Images, fonts, and static files
+```
+
+### **Core Principles**
+1. **Theme-First Design** - All UI must use the theme system
+2. **Expo Router Navigation** - File-based routing structure
+3. **Component Reusability** - Extract reusable elements
+4. **Service Integration** - Leverage built-in utilities
+5. **TypeScript Everywhere** - Type safety and developer experience
+6. **Accessibility by Default** - Support all users
+7. **Documentation-Driven** - Code should be self-explanatory
+
+---
+
+## 🎨 **Design System Enforcement**
+
+### **✅ ALWAYS Use Theme System**
+```typescript
+// ✅ CORRECT - Use theme colors and fonts
+import { Colors, Fonts } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+const colorScheme = useColorScheme();
+const colors = Colors[colorScheme ?? 'light'];
+
+<Text style={[Fonts.titleLarge, { color: colors.textPrimary }]}>
+  Welcome
+</Text>
+<TouchableOpacity style={ButtonStyles.primary}>
+  <Text style={ButtonStyles.primaryText}>Action</Text>
+</TouchableOpacity>
+
+// ❌ INCORRECT - Hard-coded values
+<Text style={{ fontSize: 24, color: '#000000' }}>Title</Text>
+<TouchableOpacity style={{ backgroundColor: '#007AFF' }}>
+```
+
+### **Required Theme Usage**
+- **Colors**: Use `Colors.light.textPrimary`, `Colors.dark.backgroundSecondary`, etc.
+- **Fonts**: Use `Fonts.titleLarge`, `Fonts.bodyMedium`, etc.
+- **Buttons**: Use `ButtonStyles.primary`, `ButtonStyles.secondary`, etc.
+- **Spacing**: Use consistent padding (16, 20, 24, 40)
+- **Border Radius**: Use theme standards (6, 8, 12)
+
+### **Design Consistency Checklist**
+- [ ] All text uses theme fonts
+- [ ] All colors come from theme system
+- [ ] Button styles are consistent across flows
+- [ ] Spacing follows standard increments
+- [ ] Dark mode is properly supported
+- [ ] Accessibility labels are included
+- [ ] TypeScript types are properly defined
+
+---
+
+## 📱 **Screen Development Standards**
+
+### **Screen Organization Rules**
+1. **Use Expo Router** file-based navigation structure
+2. **Create flow groups** using `(groupName)` folders for related screens
+3. **Keep single screens** in appropriate flow folders
+4. **Follow consistent structure** per screen template
+5. **Use proper component organization** with clear sections
+6. **Include comprehensive error handling** for all states
+
+### **Required Screen Patterns**
+```typescript
+// ✅ Standard screen structure
+import React from 'react';
+import { View, Text, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors, Fonts } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+export default function ExampleScreen() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundPrimary }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
+        {/* Header Section */}
+        <View style={{ marginBottom: 32 }}>
+          <Text style={[Fonts.displayMedium, { color: colors.textPrimary }]}>
+            Screen Title
+          </Text>
+        </View>
+
+        {/* Main Content */}
+        <View style={{ flex: 1 }}>
+          {/* Content goes here */}
+        </View>
+
+        {/* Footer Section */}
+        <View style={{ marginTop: 40 }}>
+          {/* Actions go here */}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+```
+
+### **Navigation Consistency**
+- **Use Expo Router** conventions for navigation
+- **Consistent stack navigation** patterns
+- **Proper back button handling** with router.back()
+- **Type-safe navigation** with proper TypeScript definitions
+- **Loading states** during navigation transitions
+
+### **State Management Requirements**
+- `useState` for local component state
+- `useEffect` for side effects and lifecycle
+- `useContext` for shared app state
+- Custom hooks for complex state logic
+- Service integration for persistent state
+
+---
+
+## 🧩 **Component Development Standards**
+
+### **Component Decision Matrix**
+| Create Component | Keep Inline |
+|------------------|-------------|
+| Used 2+ places | One-time use |
+| 50+ lines of code | Under 20 lines |
+| Complex logic | Simple containers |
+| Stateful behavior | Basic text/views |
+| Reusable patterns | Screen-specific UI |
+
+### **Required Component Structure**
+1. **Comprehensive documentation** with usage examples
+2. **TypeScript interfaces** for all props
+3. **Theme system integration** throughout
+4. **Accessibility support** built-in
+5. **Default props** where appropriate
+6. **Export from index files** for clean imports
+
+### **Component Template**
+```typescript
+/**
+ * COMPONENT NAME - Brief Description
+ * 
+ * Detailed description including:
+ * - Purpose and functionality
+ * - Props interface documentation
+ * - Usage examples
+ * - Integration points
+ * - Accessibility features
+ */
+
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Colors, Fonts, ButtonStyles } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+interface ExampleComponentProps {
+  title: string;
+  onPress?: () => void;
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
+}
+
+export default function ExampleComponent({
+  title,
+  onPress,
+  variant = 'primary',
+  disabled = false,
+}: ExampleComponentProps) {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  return (
+    <TouchableOpacity
+      style={[
+        ButtonStyles[variant],
+        disabled && { opacity: 0.6 }
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+    >
+      <Text style={ButtonStyles[`${variant}Text`]}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+### **Component Quality Gates**
+- [ ] Has extensive TypeScript documentation
+- [ ] Uses theme system exclusively
+- [ ] Includes accessibility support
+- [ ] Has proper prop interfaces
+- [ ] Follows naming conventions
+- [ ] Has appropriate default values
+- [ ] Handles edge cases gracefully
+
+---
+
+## 🔧 **Utility Integration Standards**
+
+### **Service Usage Patterns**
+```typescript
+// ✅ Proper service integration
+import { ApiService } from '@/utils/apiService';
+import { UserManager } from '@/utils/userManager';
+import { NotificationManager } from '@/utils/notificationManager';
+import { SuperwallService } from '@/utils/superwallService';
+
+// Configure services in app startup
+useEffect(() => {
+  ApiService.configure({
+    baseURL: 'https://api.yourapp.com',
+    timeout: 10000,
+  });
+  
+  SuperwallService.configure({
+    apiKey: 'your-superwall-key',
+  });
+}, []);
+```
+
+### **Required Integrations**
+1. **UserManager** - All screens should observe user state
+2. **ApiService** - Use for all network calls
+3. **NotificationManager** - Handle engagement campaigns
+4. **SuperwallService** - Implement strategic paywalls
+5. **EventEmitter** - Cross-component communication
+
+### **Error Handling Standards**
+- Always handle specific error types
+- Provide user-friendly error messages
+- Log errors appropriately for debugging
+- Implement retry mechanisms where appropriate
+- Use TypeScript for type-safe error handling
+
+---
+
+## 📐 **Code Quality Standards**
+
+### **Documentation Requirements**
+```typescript
+/**
+ * COMPONENT/SCREEN NAME - Brief Description
+ * 
+ * Detailed description including:
+ * - Purpose and functionality
+ * - Props/params interface
+ * - Navigation behavior
+ * - State management
+ * - Integration points
+ * - Novice developer guidance
+ */
+```
+
+### **Code Organization**
+```typescript
+// MARK: - Imports
+// MARK: - Types & Interfaces  
+// MARK: - Component
+// MARK: - Styles (if using StyleSheet)
+// MARK: - Export
+```
+
+### **Naming Conventions**
+- **Screens**: `PascalCase` ending with `Screen` or following Expo Router conventions
+- **Components**: `PascalCase` descriptive names
+- **Props Interfaces**: `ComponentNameProps`
+- **Hooks**: `camelCase` starting with `use`
+- **Constants**: `UPPER_CASE` for globals
+- **Variables**: `camelCase` with descriptive names
+
+### **TypeScript Guidelines**
+- Define interfaces for all props and parameters
+- Use strict mode TypeScript configuration
+- Avoid `any` type - use proper typing
+- Export types alongside components
+- Use generic types where appropriate
+
+### **Performance Guidelines**
+- Use `React.memo` for expensive components
+- Implement proper `useMemo` and `useCallback` optimizations
+- Avoid inline style objects in render
+- Use `FlatList` for large datasets
+- Implement proper image optimization
+
+---
+
+## ♿ **Accessibility Standards**
+
+### **Required Accessibility Support**
+```typescript
+// ✅ Accessibility implementation
+<TouchableOpacity
+  accessibilityRole="button"
+  accessibilityLabel="Continue to next step"
+  accessibilityHint="Proceeds to the main application"
+  accessibilityState={{ disabled: isLoading }}
+>
+  <Text>Continue</Text>
+</TouchableOpacity>
+
+<Text
+  accessibilityRole="header"
+  accessibilityLevel={1}
+>
+  Welcome
+</Text>
+```
+
+### **Accessibility Checklist**
+- [ ] All interactive elements have proper roles
+- [ ] Meaningful accessibility labels provided
+- [ ] Support for screen readers
+- [ ] Proper contrast ratios (4.5:1 minimum)
+- [ ] Touch targets minimum 44pt
+- [ ] Focus management for navigation
+- [ ] Voice Control compatibility
+
+---
+
+## 🧪 **Testing & Development Standards**
+
+### **Development Setup**
+```typescript
+// ✅ Environment configuration
+import { ExpoConfig } from 'expo/config';
+
+const config: ExpoConfig = {
+  name: 'Your App',
+  slug: 'your-app',
+  // Proper configuration...
+};
+
+export default config;
+```
+
+### **Testing Strategy**
+- **Unit tests** for utility functions
+- **Component tests** with React Native Testing Library
+- **Integration tests** for service interactions
+- **E2E tests** for critical user flows
+- **Accessibility tests** for compliance
+- **Performance tests** for optimization
+
+### **Debugging Tools**
+- React Native Debugger for development
+- Flipper for network inspection
+- Expo Dev Tools for quick testing
+- TypeScript compiler for type checking
+- ESLint for code quality
+
+---
+
+## 🎛️ **Development Workflow**
+
+### **Adding New Features**
+1. **Assess scope** - New flow or existing enhancement?
+2. **Check patterns** - Can existing components be reused?
+3. **Follow Expo Router** conventions for navigation
+4. **Integrate services** - Leverage existing utilities
+5. **Test thoroughly** - Multiple states and scenarios
+6. **Document completely** - Help future developers
+
+### **Design System Updates**
+1. **Evaluate impact** - How many files affected?
+2. **Update constants files** first
+3. **Test across flows** to ensure consistency
+4. **Update documentation** accordingly
+5. **Consider backwards compatibility**
+6. **Update TypeScript definitions**
+
+### **Code Review Checklist**
+- [ ] Follows architectural patterns
+- [ ] Uses theme system consistently
+- [ ] Includes proper TypeScript typing
+- [ ] Has comprehensive documentation
+- [ ] Supports accessibility
+- [ ] Handles errors gracefully
+- [ ] Integrates services properly
+- [ ] Maintains performance standards
+- [ ] Follows Expo Router conventions
+
+---
+
+## 🔄 **Flow-Specific Guidelines**
+
+### **Onboarding Flow Standards**
+- **File structure**: Use `app/(onboarding)/` group
+- **Consistent button positioning** at bottom
+- **Skip functionality** as secondary button
+- **Full-width primary actions**
+- **Progress indicators** when appropriate
+- **Clear value propositions** for each step
+
+### **Main App Flow Standards**
+- **Tab navigation**: Use `app/(tabs)/` structure
+- **Stack navigation** for hierarchical content
+- **Consistent header** usage across screens
+- **Loading states** for all async operations
+- **Empty states** for no-data scenarios
+- **Pull-to-refresh** where appropriate
+
+### **Settings Flow Standards**
+- **List-based layouts** for options
+- **Section grouping** for related settings
+- **Toggle consistency** across all switches
+- **Clear descriptions** for all options
+- **Proper logout flow** with confirmation
+
+---
+
+## 🚀 **Performance & Optimization**
+
+### **React Native Best Practices**
+- Use `React.memo` for component optimization
+- Implement `useMemo` and `useCallback` properly
+- Avoid creating objects in render methods
+- Use `FlatList` over `ScrollView` for large lists
+- Implement proper image caching and optimization
+
+### **Memory Management**
+- Clean up subscriptions in `useEffect` cleanup
+- Avoid memory leaks in event listeners
+- Use weak references where appropriate
+- Monitor memory usage during development
+- Implement proper navigation stack management
+
+### **Network Optimization**
+- Implement proper request caching in ApiService
+- Use connection pooling and request deduplication
+- Handle offline scenarios gracefully
+- Implement request retry mechanisms
+- Use proper error boundaries
+
+---
+
+## 🎨 **Visual Design Standards**
+
+### **Layout Principles**
+- **8pt grid system** for spacing consistency
+- **24pt horizontal margins** for main content
+- **20pt vertical spacing** between sections
+- **40pt bottom padding** for button areas
+- **Safe area handling** with react-native-safe-area-context
+
+### **Animation Guidelines**
+- **React Native Reanimated** for complex animations
+- **Smooth 60fps** animations throughout
+- **Consistent timing** (300ms for navigation)
+- **Easing functions** for natural motion
+- **Gesture handling** with react-native-gesture-handler
+
+### **Color Usage Patterns**
+- **Primary colors** for main actions and CTAs
+- **Secondary colors** for supporting elements
+- **Error colors** only for errors and warnings
+- **Success colors** for confirmations
+- **Neutral colors** for text and backgrounds
+
+---
+
+## 📚 **Documentation Standards**
+
+### **Code Documentation**
+- **Header comments** explaining purpose and usage
+- **TypeScript interfaces** for all props and parameters
+- **Usage examples** in component documentation
+- **Integration guides** for service usage
+- **README files** for complex features
+
+### **Project Documentation**
+- **Setup instructions** for new developers
+- **Architecture overview** and rationale
+- **Contribution guidelines** and standards
+- **Troubleshooting guide** for common issues
+- **Deployment instructions** for app stores
+
+---
+
+## 🔒 **Security & Privacy**
+
+### **Data Handling**
+- **HTTPS-only** for all network requests
+- **Secure storage** using @react-native-async-storage/async-storage properly
+- **Proper authentication** token management
+- **Data encryption** where appropriate
+- **Input validation** and sanitization
+
+### **Privacy Compliance**
+- **Permission requests** with clear explanations
+- **Data usage transparency** in UI
+- **User control** over data sharing
+- **Secure data deletion** on logout
+- **GDPR/CCPA compliance** where applicable
+
+---
+
+## 🎯 **Quality Assurance**
+
+### **Definition of Done**
+A feature is complete when it:
+- [ ] Follows all architectural patterns
+- [ ] Uses theme system consistently
+- [ ] Includes comprehensive TypeScript typing
+- [ ] Has comprehensive documentation
+- [ ] Supports accessibility requirements
+- [ ] Handles all error states
+- [ ] Integrates with services properly
+- [ ] Passes performance benchmarks
+- [ ] Works in both light and dark modes
+- [ ] Supports different screen sizes
+- [ ] Follows Expo Router conventions
+- [ ] Has proper React Native optimizations
+
+### **Code Quality Metrics**
+- **Component complexity**: Keep under 100 lines when possible
+- **Component reusability**: Extract when used 2+ times
+- **Documentation coverage**: All public APIs documented
+- **TypeScript coverage**: 100% typed code
+- **Test coverage**: Critical paths covered
+- **Performance**: Smooth 60fps interactions
+
+---
+
+## 🌟 **Best Practices Summary**
+
+1. **Design System First** - Always use theme components
+2. **Expo Router Navigation** - Follow file-based routing
+3. **TypeScript Everywhere** - Type safety and developer experience
+4. **Component Thinking** - Build reusable, documented pieces
+5. **Service Integration** - Leverage built-in utilities effectively
+6. **Accessibility by Default** - Support all users from day one
+7. **Performance Conscious** - Build smooth, responsive experiences
+8. **Documentation Driven** - Help future developers (including yourself)
+9. **Error Handling** - Gracefully handle all edge cases
+10. **Testing Comprehensive** - Cover different states and scenarios
+
+---
+
+## 📖 **Reference Documentation**
+
+- **Constants Documentation** - Colors, Fonts, and ButtonStyles
+- **Utils Documentation** - Service integration guides
+- **Expo Router Documentation** - Navigation patterns
+- **React Native Documentation** - Platform-specific guidance
+- **TypeScript Documentation** - Type definitions and patterns
+
+---
+
+> **Remember**: This boilerplate provides a solid foundation while remaining flexible for different app implementations. These rules ensure consistency and quality while allowing for customization based on specific app requirements. When in doubt, prioritize user experience, code clarity, and maintainability!
+
+## 🚀 **Getting Started**
+
+For new developers joining a project using this boilerplate:
+
+1. **Read this document** to understand the overall architecture
+2. **Study the theme system** in `/constants` to understand design consistency
+3. **Review existing flows** to see patterns in action
+4. **Check component examples** to understand reusability
+5. **Explore utility integrations** to leverage built-in services
+6. **Follow Expo Router** conventions for navigation
+7. **Use TypeScript** for better developer experience
+8. **Ask questions** and contribute to improving these rules!
+
+This boilerplate is designed to make React Native development faster, more consistent, and more enjoyable for developers of all skill levels. 🎉

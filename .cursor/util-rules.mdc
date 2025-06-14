@@ -1,0 +1,957 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Expo Boilerplate Utility Rules
+
+## 🔧 **Utility Services Architecture**
+
+This document provides comprehensive guidelines for the four core utility services in the Expo Boilerplate project. These services provide secure HTTP client functionality, automated user engagement campaigns, strategic paywall monetization, and flexible user state management.
+
+---
+
+## 🌐 **API Service (`utils/apiService.ts`)**
+
+### **Overview**
+The ApiService provides a centralized HTTP client with built-in authentication, error handling, request/response interceptors, and offline support.
+
+### **Configuration & Setup**
+```typescript
+import { ApiService } from '@/utils/apiService';
+
+// ✅ Configure at app startup
+useEffect(() => {
+  ApiService.configure({
+    baseURL: 'https://api.yourapp.com',
+    timeout: 10000,
+    apiKey: 'your-api-key',
+    enableLogging: __DEV__,
+  });
+}, []);
+```
+
+### **Authentication Integration**
+```typescript
+// ✅ Automatic token management
+await ApiService.setAuthToken(userToken);
+
+// ✅ Token refresh handling
+ApiService.onTokenExpired(() => {
+  // Redirect to login or refresh token
+  UserManager.logout();
+});
+
+// ✅ Clear authentication
+await ApiService.clearAuth();
+```
+
+### **Making API Calls**
+```typescript
+// ✅ GET requests
+const user = await ApiService.get('/user/profile');
+const users = await ApiService.get('/users', { page: 1, limit: 10 });
+
+// ✅ POST requests  
+const newUser = await ApiService.post('/users', {
+  name: 'John Doe',
+  email: 'john@example.com',
+});
+
+// ✅ PUT/PATCH requests
+const updatedUser = await ApiService.put('/users/123', userData);
+const partialUpdate = await ApiService.patch('/users/123', { name: 'Jane' });
+
+// ✅ DELETE requests
+await ApiService.delete('/users/123');
+
+// ✅ File uploads
+const formData = new FormData();
+formData.append('file', fileBlob);
+formData.append('name', 'Profile Picture');
+
+const uploadResult = await ApiService.upload('/upload', formData, {
+  onUploadProgress: (progress) => {
+    console.log(`Upload progress: ${progress}%`);
+  }
+});
+```
+
+### **Error Handling Patterns**
+```typescript
+// ✅ Comprehensive error handling
+try {
+  const data = await ApiService.get('/endpoint');
+  return data;
+} catch (error) {
+  if (error.isNetworkError) {
+    // Handle network issues
+    showMessage('Please check your internet connection');
+  } else if (error.status === 401) {
+    // Handle authentication errors
+    UserManager.logout();
+    router.replace('/login');
+  } else if (error.status === 404) {
+    // Handle not found
+    showMessage('Resource not found');
+  } else if (error.status >= 500) {
+    // Handle server errors
+    showMessage('Server error. Please try again later.');
+  } else {
+    // Handle other errors
+    showMessage(error.message || 'An unexpected error occurred');
+  }
+}
+```
+
+### **Offline Support**
+```typescript
+// ✅ Handle offline scenarios
+const result = await ApiService.get('/data', {
+  cacheFirst: true,  // Use cache if available
+  retryOnConnection: true,  // Retry when connection restored
+});
+
+// ✅ Queue requests for when online
+ApiService.queueForRetry('/sync-data', 'POST', localData);
+```
+
+### **Request Interceptors**
+```typescript
+// ✅ Add custom headers
+ApiService.addRequestInterceptor((config) => {
+  config.headers['X-App-Version'] = Constants.expoConfig?.version;
+  config.headers['X-Platform'] = Platform.OS;
+  return config;
+});
+
+// ✅ Response transformation
+ApiService.addResponseInterceptor(
+  (response) => {
+    // Transform successful responses
+    return response.data;
+  },
+  (error) => {
+    // Handle global errors
+    if (error.status === 401) {
+      EventEmitter.emit('auth:expired');
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### **Performance Optimization**
+```typescript
+// ✅ Request caching
+const cachedData = await ApiService.get('/data', {
+  cache: true,
+  cacheTTL: 5 * 60 * 1000, // 5 minutes
+});
+
+// ✅ Request deduplication
+const [user1, user2] = await Promise.all([
+  ApiService.get('/user/123'), // First request
+  ApiService.get('/user/123'), // Deduplicated - uses same request
+]);
+
+// ✅ Concurrent request limiting
+ApiService.setMaxConcurrentRequests(3);
+```
+
+---
+
+## 👤 **User Manager (`utils/userManager.ts`)**
+
+### **Overview**
+UserManager handles user authentication, profile management, session persistence, and user state synchronization across the app.
+
+### **Authentication Flow**
+```typescript
+import { UserManager } from '@/utils/userManager';
+
+// ✅ Login user
+const loginUser = async (credentials: LoginCredentials) => {
+  try {
+    const result = await UserManager.login(credentials);
+    
+    if (result.success) {
+      // Navigate to main app
+      router.replace('/(tabs)/');
+    } else {
+      // Handle login failure
+      setError(result.error);
+    }
+  } catch (error) {
+    setError('Login failed. Please try again.');
+  }
+};
+
+// ✅ Register new user
+const registerUser = async (userData: RegistrationData) => {
+  try {
+    const result = await UserManager.register(userData);
+    
+    if (result.success) {
+      // Navigate to onboarding or main app
+      router.replace('/(onboarding)/welcome');
+    }
+  } catch (error) {
+    setError('Registration failed. Please try again.');
+  }
+};
+
+// ✅ Logout user
+const logoutUser = async () => {
+  await UserManager.logout();
+  router.replace('/login');
+};
+```
+
+### **User State Management**
+```typescript
+// ✅ Observe user state in components
+const [user, setUser] = useState(UserManager.getCurrentUser());
+const [isAuthenticated, setIsAuthenticated] = useState(UserManager.isAuthenticated());
+
+useEffect(() => {
+  const unsubscribe = UserManager.onUserStateChange((newUser) => {
+    setUser(newUser);
+    setIsAuthenticated(!!newUser);
+  });
+  
+  return unsubscribe;
+}, []);
+
+// ✅ Update user profile
+const updateProfile = async (profileData: Partial<UserProfile>) => {
+  try {
+    await UserManager.updateProfile(profileData);
+    showMessage('Profile updated successfully');
+  } catch (error) {
+    showMessage('Failed to update profile');
+  }
+};
+```
+
+### **Session Management**
+```typescript
+// ✅ Check and refresh sessions
+useEffect(() => {
+  const checkSession = async () => {
+    const isValid = await UserManager.validateSession();
+    
+    if (!isValid) {
+      // Session expired, redirect to login
+      router.replace('/login');
+    }
+  };
+  
+  checkSession();
+}, []);
+
+// ✅ Auto-refresh tokens
+UserManager.enableAutoTokenRefresh({
+  refreshThreshold: 5 * 60 * 1000, // Refresh 5 minutes before expiry
+  maxRetries: 3,
+});
+```
+
+### **User Preferences & Settings**
+```typescript
+// ✅ Manage user preferences
+const updatePreferences = async (preferences: UserPreferences) => {
+  await UserManager.updatePreferences(preferences);
+};
+
+const getPreference = (key: string, defaultValue?: any) => {
+  return UserManager.getPreference(key, defaultValue);
+};
+
+// ✅ Theme preference integration
+useEffect(() => {
+  const themePreference = UserManager.getPreference('theme', 'system');
+  setColorScheme(themePreference);
+}, []);
+```
+
+### **Storage Backends**
+```typescript
+// ✅ Configure storage backend
+UserManager.configureStorage({
+  backend: 'secure', // 'secure', 'async', 'memory'
+  encryptionKey: 'your-encryption-key',
+  keyPrefix: 'app_',
+});
+
+// ✅ Multi-backend support
+await UserManager.migrateStorage('async', 'secure');
+```
+
+---
+
+## 🔔 **Notification Manager (`utils/notificationManager.ts`)**
+
+### **Overview**
+NotificationManager handles push notifications, local notifications, user engagement campaigns, and notification preferences.
+
+### **Setup & Initialization**
+```typescript
+import { NotificationManager } from '@/utils/notificationManager';
+
+// ✅ Initialize at app startup
+useEffect(() => {
+  const initNotifications = async () => {
+    await NotificationManager.initialize({
+      enablePushNotifications: true,
+      enableLocalNotifications: true,
+      requestPermissionsOnLaunch: true,
+    });
+    
+    // Register device for push notifications
+    await NotificationManager.registerForPushNotifications();
+  };
+  
+  initNotifications();
+}, []);
+```
+
+### **Permission Management**
+```typescript
+// ✅ Request permissions with context
+const requestNotificationPermissions = async () => {
+  const granted = await NotificationManager.requestPermissions({
+    title: 'Stay Updated',
+    message: 'Get notified about important updates and new features.',
+    showInSettings: true,
+  });
+  
+  if (granted) {
+    await NotificationManager.registerForPushNotifications();
+  } else {
+    // Handle permission denied
+    setShowPermissionExplanation(true);
+  }
+};
+
+// ✅ Check current permission status
+const checkPermissions = async () => {
+  const status = await NotificationManager.getPermissionStatus();
+  
+  switch (status) {
+    case 'granted':
+      // Notifications enabled
+      break;
+    case 'denied':
+      // Show settings prompt
+      break;
+    case 'undetermined':
+      // Show permission request
+      break;
+  }
+};
+```
+
+### **Sending Local Notifications**
+```typescript
+// ✅ Schedule local notifications
+const scheduleReminder = async () => {
+  await NotificationManager.scheduleNotification({
+    id: 'daily-reminder',
+    title: 'Daily Check-in',
+    body: "Don't forget to check your progress today!",
+    trigger: {
+      type: 'daily',
+      hour: 9,
+      minute: 0,
+    },
+    data: {
+      screen: 'dashboard',
+      action: 'check-in',
+    },
+  });
+};
+
+// ✅ Immediate notifications
+const showInstantNotification = () => {
+  NotificationManager.presentNotification({
+    title: 'Task Completed',
+    body: 'Great job! You completed your daily goal.',
+    badge: 1,
+    sound: 'success.wav',
+  });
+};
+```
+
+### **Handling Notification Interactions**
+```typescript
+// ✅ Handle notification taps
+useEffect(() => {
+  const subscription = NotificationManager.onNotificationTap((notification) => {
+    const { screen, action, id } = notification.data;
+    
+    // Navigate based on notification data
+    if (screen) {
+      router.push(screen);
+    }
+    
+    // Perform specific actions
+    if (action === 'check-in') {
+      handleCheckIn();
+    }
+    
+    // Mark as read
+    NotificationManager.markAsRead(id);
+  });
+  
+  return () => subscription.remove();
+}, []);
+
+// ✅ Handle notification received while app is foreground
+useEffect(() => {
+  const subscription = NotificationManager.onNotificationReceived((notification) => {
+    // Show in-app notification or update badge
+    setBadgeCount(prev => prev + 1);
+    
+    // Add to notification center
+    addToNotificationList(notification);
+  });
+  
+  return () => subscription.remove();
+}, []);
+```
+
+### **User Engagement Campaigns**
+```typescript
+// ✅ Set up engagement triggers
+NotificationManager.createEngagementCampaign({
+  name: 'Re-engagement',
+  triggers: [
+    {
+      type: 'user_inactive',
+      duration: 7 * 24 * 60 * 60 * 1000, // 7 days
+      notification: {
+        title: 'We miss you!',
+        body: 'Come back and see what\'s new.',
+      },
+    },
+    {
+      type: 'feature_unused',
+      feature: 'premium_features',
+      duration: 3 * 24 * 60 * 60 * 1000, // 3 days
+      notification: {
+        title: 'Unlock Premium Features',
+        body: 'Try our premium features for free this week!',
+      },
+    },
+  ],
+});
+
+// ✅ Track user events for targeting
+NotificationManager.trackEvent('feature_used', {
+  feature: 'search',
+  timestamp: Date.now(),
+});
+
+NotificationManager.trackEvent('screen_viewed', {
+  screen: 'profile',
+  duration: 45000, // 45 seconds
+});
+```
+
+### **Notification Preferences**
+```typescript
+// ✅ Manage user notification preferences
+const updateNotificationPreferences = async (preferences: NotificationPreferences) => {
+  await NotificationManager.updatePreferences({
+    pushNotifications: preferences.push,
+    emailNotifications: preferences.email,
+    categories: {
+      marketing: preferences.marketing,
+      updates: preferences.updates,
+      reminders: preferences.reminders,
+    },
+    quietHours: {
+      enabled: preferences.quietHours,
+      start: { hour: 22, minute: 0 },
+      end: { hour: 8, minute: 0 },
+    },
+  });
+};
+
+// ✅ Get current preferences
+const getNotificationPreferences = () => {
+  return NotificationManager.getPreferences();
+};
+```
+
+---
+
+## 💰 **Superwall Service (`utils/superwallService.ts`)**
+
+### **Overview**
+SuperwallService handles paywall monetization, subscription management, A/B testing for pricing, and revenue optimization.
+
+### **Setup & Configuration**
+```typescript
+import { SuperwallService } from '@/utils/superwallService';
+
+// ✅ Configure at app startup
+useEffect(() => {
+  SuperwallService.configure({
+    apiKey: 'your-superwall-api-key',
+    userId: UserManager.getCurrentUser()?.id,
+    enableLogging: __DEV__,
+    enableA11y: true,
+  });
+}, []);
+
+// ✅ Update user attributes for targeting
+useEffect(() => {
+  if (user) {
+    SuperwallService.setUserAttributes({
+      userId: user.id,
+      email: user.email,
+      createdAt: user.createdAt,
+      trialDaysRemaining: calculateTrialDays(user),
+      hasCompletedOnboarding: user.onboardingCompleted,
+      lastActiveDate: new Date().toISOString(),
+    });
+  }
+}, [user]);
+```
+
+### **Paywall Presentation**
+```typescript
+// ✅ Show paywalls strategically
+const showPaywall = async (trigger: string, context?: any) => {
+  try {
+    const result = await SuperwallService.presentPaywall(trigger, {
+      context,
+      fallbackAction: 'dismiss', // or 'navigate_to_settings'
+    });
+    
+    if (result.action === 'purchased') {
+      // Handle successful purchase
+      await UserManager.refreshSubscriptionStatus();
+      showMessage('Welcome to Premium!');
+      
+      // Navigate to premium features
+      router.push('/premium-features');
+      
+    } else if (result.action === 'dismissed') {
+      // Handle dismissal
+      console.log('User dismissed paywall');
+      
+    } else if (result.action === 'error') {
+      // Handle errors
+      console.error('Paywall error:', result.error);
+    }
+    
+  } catch (error) {
+    console.error('Failed to present paywall:', error);
+  }
+};
+
+// ✅ Common paywall triggers
+const handleFeatureAccess = (featureName: string) => {
+  const user = UserManager.getCurrentUser();
+  
+  if (!user?.isPremium) {
+    showPaywall('feature_access', { 
+      feature: featureName,
+      source: 'feature_gate' 
+    });
+    return false;
+  }
+  
+  return true;
+};
+
+const handleUsageLimit = (limitType: string) => {
+  showPaywall('usage_limit_reached', { 
+    limitType,
+    source: 'usage_limit' 
+  });
+};
+```
+
+### **Subscription Status Management**
+```typescript
+// ✅ Check subscription status
+const checkSubscriptionStatus = useCallback(async () => {
+  try {
+    const status = await SuperwallService.getSubscriptionStatus();
+    
+    setSubscriptionInfo({
+      isActive: status.isActive,
+      productId: status.productId,
+      expiresAt: status.expiresAt,
+      willRenew: status.willRenew,
+      isInTrial: status.isInTrial,
+      trialEndsAt: status.trialEndsAt,
+    });
+    
+  } catch (error) {
+    console.error('Failed to get subscription status:', error);
+  }
+}, []);
+
+// ✅ Handle subscription events
+useEffect(() => {
+  const unsubscribe = SuperwallService.onSubscriptionChange((event) => {
+    switch (event.type) {
+      case 'subscription_started':
+        showMessage('Subscription activated!');
+        UserManager.updateSubscriptionStatus(true);
+        break;
+        
+      case 'subscription_cancelled':
+        showMessage('Subscription cancelled');
+        // Show retention paywall
+        showPaywall('subscription_cancelled');
+        break;
+        
+      case 'subscription_expired':
+        showMessage('Subscription expired');
+        UserManager.updateSubscriptionStatus(false);
+        showPaywall('subscription_expired');
+        break;
+        
+      case 'trial_started':
+        showMessage('Free trial started!');
+        break;
+        
+      case 'trial_ending_soon':
+        // Show trial ending reminder
+        showPaywall('trial_ending', { daysRemaining: event.daysRemaining });
+        break;
+    }
+  });
+  
+  return unsubscribe;
+}, []);
+```
+
+### **A/B Testing & Analytics**
+```typescript
+// ✅ Track paywall events
+SuperwallService.trackEvent('paywall_viewed', {
+  trigger: 'feature_access',
+  feature: 'premium_feature',
+  user_segment: 'power_user',
+});
+
+SuperwallService.trackEvent('purchase_attempt', {
+  product_id: 'premium_monthly',
+  price: 9.99,
+  currency: 'USD',
+});
+
+// ✅ Custom event tracking
+const trackFeatureUsage = (featureName: string, metadata?: any) => {
+  SuperwallService.trackEvent('feature_used', {
+    feature: featureName,
+    timestamp: Date.now(),
+    ...metadata,
+  });
+};
+
+// ✅ Revenue analytics
+const getRevenueMetrics = async () => {
+  const metrics = await SuperwallService.getAnalytics();
+  
+  return {
+    totalRevenue: metrics.totalRevenue,
+    monthlyRecurringRevenue: metrics.mrr,
+    averageRevenuePerUser: metrics.arpu,
+    conversionRate: metrics.conversionRate,
+    churnRate: metrics.churnRate,
+  };
+};
+```
+
+### **Paywall Customization**
+```typescript
+// ✅ Configure paywall appearance
+SuperwallService.configurePaywall({
+  theme: {
+    primaryColor: Colors.light.primary,
+    backgroundColor: Colors.light.backgroundPrimary,
+    textColor: Colors.light.textPrimary,
+    fontFamily: 'System',
+  },
+  content: {
+    showCloseButton: true,
+    showRestorePurchases: true,
+    showPrivacyPolicy: true,
+    showTermsOfService: true,
+  },
+  behavior: {
+    allowDismissal: true,
+    requireUserAction: false,
+    showLoadingIndicator: true,
+  },
+});
+
+// ✅ Handle paywall lifecycle
+SuperwallService.onPaywallEvent((event) => {
+  switch (event.type) {
+    case 'paywall_opened':
+      // Track analytics
+      break;
+    case 'paywall_closed':
+      // Handle closure
+      break;
+    case 'purchase_started':
+      // Show loading state
+      break;
+    case 'purchase_completed':
+      // Show success message
+      break;
+    case 'purchase_failed':
+      // Handle error
+      break;
+  }
+});
+```
+
+---
+
+## 📡 **Event Emitter (`utils/eventEmitter.ts`)**
+
+### **Overview**
+EventEmitter provides cross-component communication, service coordination, and decoupled event handling throughout the app.
+
+### **Basic Usage**
+```typescript
+import { EventEmitter } from '@/utils/eventEmitter';
+
+// ✅ Subscribe to events
+useEffect(() => {
+  const unsubscribe = EventEmitter.on('user:updated', (userData) => {
+    setUser(userData);
+    showMessage('Profile updated successfully');
+  });
+  
+  return unsubscribe;
+}, []);
+
+// ✅ Emit events
+const updateUserProfile = async (profileData) => {
+  await UserManager.updateProfile(profileData);
+  EventEmitter.emit('user:updated', profileData);
+};
+
+// ✅ One-time event listeners
+EventEmitter.once('app:initialized', () => {
+  console.log('App fully initialized');
+});
+```
+
+### **Common Event Patterns**
+```typescript
+// ✅ Authentication events
+EventEmitter.emit('auth:login', { user, token });
+EventEmitter.emit('auth:logout', { reason: 'user_action' });
+EventEmitter.emit('auth:expired', { redirectTo: '/login' });
+
+// ✅ Data synchronization events
+EventEmitter.emit('data:sync:started', { entity: 'users' });
+EventEmitter.emit('data:sync:completed', { entity: 'users', count: 150 });
+EventEmitter.emit('data:sync:failed', { entity: 'users', error: 'Network error' });
+
+// ✅ UI state events
+EventEmitter.emit('ui:theme:changed', { theme: 'dark' });
+EventEmitter.emit('ui:modal:opened', { modalId: 'profile-edit' });
+EventEmitter.emit('ui:toast:show', { message: 'Success!', type: 'success' });
+
+// ✅ Feature events
+EventEmitter.emit('feature:accessed', { feature: 'premium-export' });
+EventEmitter.emit('feature:limit:reached', { feature: 'api-calls', limit: 100 });
+```
+
+### **Service Integration Events**
+```typescript
+// ✅ API service events
+EventEmitter.on('api:request:started', ({ url, method }) => {
+  // Show loading indicator
+});
+
+EventEmitter.on('api:request:completed', ({ url, status }) => {
+  // Hide loading indicator
+});
+
+EventEmitter.on('api:error', ({ error, url }) => {
+  // Handle global API errors
+  if (error.status === 401) {
+    EventEmitter.emit('auth:expired');
+  }
+});
+
+// ✅ Notification events
+EventEmitter.on('notification:received', (notification) => {
+  // Update badge count
+  // Show in-app notification
+});
+
+EventEmitter.on('notification:tapped', ({ data }) => {
+  // Handle navigation
+  if (data.screen) {
+    router.push(data.screen);
+  }
+});
+```
+
+---
+
+## 🔄 **Service Integration Patterns**
+
+### **Cross-Service Communication**
+```typescript
+// ✅ Coordinated service actions
+const performCompleteLogout = async () => {
+  // 1. Clear user data
+  await UserManager.logout();
+  
+  // 2. Clear API authentication
+  await ApiService.clearAuth();
+  
+  // 3. Clear notification registration
+  await NotificationManager.unregisterDevice();
+  
+  // 4. Reset Superwall user
+  SuperwallService.reset();
+  
+  // 5. Emit global event
+  EventEmitter.emit('app:logout:completed');
+  
+  // 6. Navigate to login
+  router.replace('/login');
+};
+
+// ✅ Service health monitoring
+const checkServiceHealth = async () => {
+  const health = {
+    api: await ApiService.healthCheck(),
+    user: UserManager.isInitialized(),
+    notifications: await NotificationManager.getStatus(),
+    superwall: SuperwallService.isConfigured(),
+  };
+  
+  EventEmitter.emit('services:health:update', health);
+  return health;
+};
+```
+
+### **Error Recovery Patterns**
+```typescript
+// ✅ Coordinated error recovery
+EventEmitter.on('api:network:restored', async () => {
+  // Retry failed requests
+  await ApiService.retryFailedRequests();
+  
+  // Sync user data
+  await UserManager.syncUserData();
+  
+  // Re-register for notifications
+  await NotificationManager.refreshRegistration();
+  
+  // Update Superwall attributes
+  SuperwallService.syncUserAttributes();
+});
+
+// ✅ Service fallback patterns
+const getDataWithFallback = async (endpoint: string) => {
+  try {
+    return await ApiService.get(endpoint);
+  } catch (error) {
+    if (error.isNetworkError) {
+      // Try cached data
+      return await ApiService.getCachedData(endpoint);
+    }
+    throw error;
+  }
+};
+```
+
+---
+
+## 🧪 **Testing Utilities**
+
+### **Service Mocking**
+```typescript
+// ✅ Mock services for testing
+export const mockServices = {
+  api: {
+    configure: jest.fn(),
+    get: jest.fn(),
+    post: jest.fn(),
+    setAuthToken: jest.fn(),
+  },
+  user: {
+    login: jest.fn(),
+    logout: jest.fn(),
+    getCurrentUser: jest.fn(),
+    isAuthenticated: jest.fn(() => true),
+  },
+  notifications: {
+    initialize: jest.fn(),
+    requestPermissions: jest.fn(() => Promise.resolve(true)),
+    scheduleNotification: jest.fn(),
+  },
+  superwall: {
+    configure: jest.fn(),
+    presentPaywall: jest.fn(),
+    getSubscriptionStatus: jest.fn(),
+  },
+};
+
+// ✅ Test service integration
+describe('Service Integration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
+  it('handles login flow correctly', async () => {
+    mockServices.user.login.mockResolvedValue({ success: true, user: mockUser });
+    
+    const result = await performLogin(credentials);
+    
+    expect(mockServices.user.login).toHaveBeenCalledWith(credentials);
+    expect(mockServices.api.setAuthToken).toHaveBeenCalledWith(mockUser.token);
+  });
+});
+```
+
+---
+
+## 🌟 **Best Practices Summary**
+
+### **Service Design Principles**
+1. **Single Responsibility** - Each service has a clear, focused purpose
+2. **Consistent APIs** - Similar patterns across all services
+3. **Error Handling** - Comprehensive error recovery and user feedback
+4. **Event-Driven** - Loose coupling through event communication
+5. **Testability** - Easy to mock and test in isolation
+6. **Performance** - Optimized for mobile with caching and offline support
+7. **Type Safety** - Full TypeScript integration with proper interfaces
+
+### **Integration Guidelines**
+- **Initialize services** at app startup in proper order
+- **Handle service errors** gracefully with user-friendly messages
+- **Use EventEmitter** for cross-service communication
+- **Implement offline support** where appropriate
+- **Mock services** in tests for reliable testing
+- **Monitor service health** and provide fallbacks
+- **Document service APIs** thoroughly for team usage
+
+### **Security Considerations**
+- **Never log sensitive data** (tokens, passwords, personal info)
+- **Use secure storage** for authentication tokens
+- **Implement proper session management** with automatic refresh
+- **Validate all inputs** and sanitize data
+- **Handle authentication expiry** gracefully
+- **Use HTTPS only** for all API communications
+
+Remember: These services are the backbone of your app. Invest in making them robust, reliable, and easy to use!

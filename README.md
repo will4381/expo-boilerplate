@@ -1,50 +1,71 @@
-# Welcome to your Expo app 👋
+# 📱 Expo React Native Boilerplate
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A comprehensive, production-ready React Native boilerplate built with **Expo Router** and **TypeScript**. This template provides a solid foundation for building cross-platform mobile apps with modern development practices and integrated services.
 
-## Get started
+## 🚀 What's Included
 
-1. Install dependencies
+### **🏗️ Architecture**
+- **Expo Router** - File-based navigation system
+- **TypeScript** - Full type safety throughout
+- **Theme System** - Consistent design with light/dark mode support
+- **Component Library** - Reusable UI components organized by flow
 
+### **🛠️ Built-in Services**
+- **API Service** - Secure HTTP client with authentication
+- **User Management** - Complete user state management
+- **Push Notifications** - Automated engagement campaigns
+- **Paywall Integration** - Monetization with Superwall
+- **Event System** - Cross-component communication
+
+### **📁 Project Structure**
+```
+app/              # Expo Router screens
+components/       # Reusable UI components
+constants/        # Theme system (Colors, Fonts, Styles)
+utils/           # Core services and utilities
+hooks/           # Custom React hooks
+assets/          # Images, fonts, and static files
+```
+
+## 🏃‍♂️ Quick Start
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Start development server**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. **Open in your preferred environment:**
+   - **Expo Go** - Scan QR code with the Expo Go app
+   - **iOS Simulator** - Press `i` in terminal
+   - **Android Emulator** - Press `a` in terminal
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🎨 Key Features
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **📱 Cross-Platform** - iOS, Android, and Web support
+- **🎯 Production Ready** - Includes essential services and patterns
+- **♿ Accessible** - Built-in accessibility support
+- **🔒 Secure** - HTTP client with authentication handling
+- **💰 Monetizable** - Integrated paywall system
+- **📊 Scalable** - Organized architecture for growing teams
 
-## Get a fresh project
+## 📖 Documentation
 
-When you're ready, run:
+- **`@expo-boilerplate-rules.mdc`** - Comprehensive development guidelines
+- **Theme System** - Located in `constants/` directory
+- **Service Documentation** - Individual service files in `utils/`
 
-```bash
-npm run reset-project
-```
+## 🎯 Perfect For
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **MVP Development** - Rapid prototyping and validation
+- **Production Apps** - Enterprise-grade architecture
+- **Team Projects** - Consistent patterns and conventions
+- **Learning** - Modern React Native development practices
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**Start building your next mobile app with confidence!** 🚀

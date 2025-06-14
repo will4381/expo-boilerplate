@@ -1,0 +1,637 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Expo Boilerplate Theme Rules
+
+## 🎨 **Design System Overview**
+
+This document outlines the complete theme system for the Expo Boilerplate project. All theme files are located in the `constants/` directory and provide a comprehensive design foundation with Colors, Fonts, and ButtonStyles.
+
+---
+
+## 🌈 **Colors (`constants/Colors.ts`)**
+
+### **How It Works**
+The color system supports both light and dark modes with semantic naming for better maintainability and accessibility.
+
+```typescript
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+// ✅ Proper color usage
+const colorScheme = useColorScheme();
+const colors = Colors[colorScheme ?? 'light'];
+
+<View style={{ backgroundColor: colors.backgroundPrimary }}>
+  <Text style={{ color: colors.textPrimary }}>Content</Text>
+</View>
+```
+
+### **Available Color Categories**
+
+#### **Accent Colors**
+- `Colors.light.accentColor` / `Colors.dark.accentColor` - Primary brand highlight color
+
+#### **Background Colors**
+- `Colors.light.backgroundPrimary` / `Colors.dark.backgroundPrimary` - Main background surfaces
+- `Colors.light.backgroundSecondary` / `Colors.dark.backgroundSecondary` - Secondary background surfaces
+
+#### **UI Elements**
+- `Colors.light.border` / `Colors.dark.border` - Border colors for UI elements
+- `Colors.light.divider` / `Colors.dark.divider` - Divider lines and separators
+- `Colors.light.shadow` / `Colors.dark.shadow` - Shadow colors
+
+#### **Status Colors**
+- `Colors.light.error` / `Colors.dark.error` - Error states and destructive actions
+- `Colors.light.success` / `Colors.dark.success` - Success states and confirmations
+- `Colors.light.warning` / `Colors.dark.warning` - Warning states and cautions
+
+#### **Primary Colors**
+- `Colors.light.primary` / `Colors.dark.primary` - Main brand color
+- `Colors.light.primaryVariant` / `Colors.dark.primaryVariant` - Variant of the main brand color
+
+#### **Text Colors**
+- `Colors.light.textPrimary` / `Colors.dark.textPrimary` - Primary text color for maximum readability
+- `Colors.light.textSecondary` / `Colors.dark.textSecondary` - Secondary text color for less prominent text
+
+### **Usage Examples**
+```typescript
+// ✅ Text styling with theme colors
+<Text style={[Fonts.titleLarge, { color: colors.textPrimary }]}>
+  Welcome!
+</Text>
+
+// ✅ Background styling
+<View style={{ backgroundColor: colors.backgroundSecondary }}>
+  <Text style={{ color: colors.textSecondary }}>Subtitle</Text>
+</View>
+
+// ✅ Status indicators
+<Text style={{ color: colors.error }}>Error occurred</Text>
+<Text style={{ color: colors.success }}>Success!</Text>
+<Text style={{ color: colors.warning }}>Warning message</Text>
+
+// ✅ Interactive elements
+<TouchableOpacity style={{ backgroundColor: colors.primary }}>
+  <Text style={{ color: '#FFFFFF' }}>Button</Text>
+</TouchableOpacity>
+```
+
+### **Helper Functions**
+```typescript
+// ✅ Get colors based on color scheme
+import { getColors } from '@/constants/Colors';
+
+const colors = getColors(colorScheme);
+
+// ✅ Individual color imports
+import { LightColors, DarkColors } from '@/constants/Colors';
+
+const textColor = colorScheme === 'dark' ? DarkColors.textPrimary : LightColors.textPrimary;
+```
+
+### **Color Customization Guidelines**
+1. **Always use semantic names** (`.textPrimary` vs `.black`)
+2. **Test contrast ratios** (4.5:1 minimum for normal text)
+3. **Verify both light and dark modes** work properly
+4. **Consider colorblind users** with sufficient contrast
+5. **Use consistent color meanings** across the app
+
+### **Accessibility Standards**
+- **Contrast Ratios**: Minimum 4.5:1 for normal text, 3:1 for large text
+- **Color Independence**: Never rely solely on color to convey information
+- **High Contrast Support**: Test with high contrast mode enabled
+- **Color Blind Testing**: Verify usability for color blind users
+
+---
+
+## 📝 **Fonts (`constants/Fonts.ts`)**
+
+### **Typography Hierarchy**
+The font system provides a comprehensive typography scale following design best practices with clear hierarchy and semantic naming.
+
+### **Available Font Categories**
+
+#### **Display Fonts (36-28pt) - Large Titles**
+```typescript
+import { Fonts } from '@/constants/Fonts';
+
+<Text style={Fonts.displayLarge}>Main Headlines</Text>    // 36pt, bold
+<Text style={Fonts.displayMedium}>Sub Headlines</Text>    // 32pt, bold
+<Text style={Fonts.displaySmall}>Section Titles</Text>   // 28pt, bold
+```
+
+#### **Title Fonts (24-20pt) - Section Headers**
+```typescript
+<Text style={Fonts.titleLarge}>Page Titles</Text>        // 24pt, bold
+<Text style={Fonts.titleMedium}>Section Headers</Text>   // 22pt, semibold
+<Text style={Fonts.titleSmall}>Subsection Headers</Text> // 20pt, semibold
+```
+
+#### **Headline Fonts (18-16pt) - Subsection Headers**
+```typescript
+<Text style={Fonts.headlineLarge}>Card Titles</Text>     // 18pt, semibold
+<Text style={Fonts.headlineMedium}>List Headers</Text>   // 17pt, semibold
+<Text style={Fonts.headlineSmall}>Small Headers</Text>   // 16pt, medium
+```
+
+#### **Body Fonts (17-15pt) - Main Content**
+```typescript
+<Text style={Fonts.bodyLarge}>Primary Content</Text>     // 17pt, regular
+<Text style={Fonts.bodyMedium}>Standard Content</Text>   // 16pt, regular
+<Text style={Fonts.bodySmall}>Secondary Content</Text>   // 15pt, regular
+```
+
+#### **Label Fonts (14-12pt) - Form Labels and UI**
+```typescript
+<Text style={Fonts.labelLarge}>Form Labels</Text>        // 14pt, medium
+<Text style={Fonts.labelMedium}>Input Labels</Text>      // 13pt, medium
+<Text style={Fonts.labelSmall}>Helper Text</Text>        // 12pt, medium
+```
+
+#### **Caption Fonts (12-10pt) - Supplementary Info**
+```typescript
+<Text style={Fonts.captionLarge}>Image Captions</Text>   // 12pt, regular
+<Text style={Fonts.captionMedium}>Metadata</Text>        // 11pt, regular
+<Text style={Fonts.captionSmall}>Fine Print</Text>       // 10pt, regular
+```
+
+#### **Button Fonts (18-14pt) - Interactive Elements**
+```typescript
+<Text style={Fonts.buttonLarge}>Large Buttons</Text>     // 18pt, semibold
+<Text style={Fonts.buttonMedium}>Standard Buttons</Text> // 16pt, medium
+<Text style={Fonts.buttonSmall}>Small Buttons</Text>     // 14pt, medium
+```
+
+#### **Specialized Fonts**
+```typescript
+<Text style={Fonts.navigationTitle}>Nav Titles</Text>    // 20pt, semibold
+<Text style={Fonts.tabBarItem}>Tab Labels</Text>         // 12pt, medium
+<Text style={Fonts.footnote}>Footnotes</Text>            // 11pt, regular
+<Text style={Fonts.overline}>Overlines</Text>            // 10pt, medium, small caps
+```
+
+#### **Monospaced Fonts (16-12pt) - Code and Numbers**
+```typescript
+<Text style={Fonts.codeLarge}>Code Blocks</Text>         // 16pt, regular, monospaced
+<Text style={Fonts.codeMedium}>Inline Code</Text>        // 14pt, regular, monospaced
+<Text style={Fonts.codeSmall}>Small Code</Text>          // 12pt, regular, monospaced
+```
+
+#### **Rounded Fonts (18-14pt) - Friendly UI**
+```typescript
+<Text style={Fonts.roundedLarge}>Friendly Headlines</Text>  // 18pt, semibold, rounded
+<Text style={Fonts.roundedMedium}>Casual Text</Text>       // 16pt, medium, rounded
+<Text style={Fonts.roundedSmall}>Playful Labels</Text>     // 14pt, medium, rounded
+```
+
+### **Font Weights Available**
+```typescript
+import { FontWeights } from '@/constants/Fonts';
+
+const customStyle = {
+  fontFamily: 'System',
+  fontWeight: FontWeights.semibold, // '600'
+  fontSize: 18,
+};
+
+// Available weights:
+// FontWeights.ultraLight  // '100'
+// FontWeights.thin        // '200'
+// FontWeights.light       // '300'
+// FontWeights.regular     // '400'
+// FontWeights.medium      // '500'
+// FontWeights.semibold    // '600'
+// FontWeights.bold        // '700'
+// FontWeights.heavy       // '800'
+// FontWeights.black       // '900'
+```
+
+### **Platform-Specific Font Families**
+The font system automatically selects appropriate fonts for each platform:
+- **iOS**: System (San Francisco)
+- **Android**: Roboto
+- **Monospace iOS**: Menlo
+- **Monospace Android**: monospace
+
+### **Usage Best Practices**
+```typescript
+// ✅ Combine fonts with colors
+<Text style={[Fonts.titleLarge, { color: colors.textPrimary }]}>
+  Properly Styled Title
+</Text>
+
+// ✅ Custom font modifications
+<Text style={[Fonts.bodyMedium, { textAlign: 'center', lineHeight: 24 }]}>
+  Centered text with custom line height
+</Text>
+
+// ✅ Responsive font sizing
+const getResponsiveFont = (baseFont: TextStyle, scale: number) => ({
+  ...baseFont,
+  fontSize: (baseFont.fontSize || 16) * scale,
+});
+```
+
+### **Typography Guidelines**
+1. **Establish Clear Hierarchy** - Use appropriate font sizes for content importance
+2. **Maintain Consistency** - Stick to the defined font scale
+3. **Consider Line Height** - Ensure proper readability with adequate line spacing
+4. **Test Accessibility** - Verify fonts work with Dynamic Type scaling
+5. **Platform Adaptation** - Let the system handle platform-specific font rendering
+
+---
+
+## 🔘 **Button Styles (`constants/ButtonStyles.ts`)**
+
+### **Available Button Styles**
+
+#### **Primary Button Styles**
+```typescript
+import { ButtonStyles } from '@/constants/ButtonStyles';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+const colorScheme = useColorScheme();
+
+// ✅ Primary button (main actions)
+<TouchableOpacity style={ButtonStyles.primary}>
+  <Text style={ButtonStyles.primaryText}>Save Changes</Text>
+</TouchableOpacity>
+
+// ✅ Primary button with dark mode
+<TouchableOpacity style={colorScheme === 'dark' ? ButtonStyles.primaryDark : ButtonStyles.primary}>
+  <Text style={colorScheme === 'dark' ? ButtonStyles.primaryTextDark : ButtonStyles.primaryText}>
+    Save Changes
+  </Text>
+</TouchableOpacity>
+```
+
+#### **Secondary Button Styles**
+```typescript
+// ✅ Secondary button (outline style)
+<TouchableOpacity style={ButtonStyles.secondary}>
+  <Text style={ButtonStyles.secondaryText}>Cancel</Text>
+</TouchableOpacity>
+
+// ✅ Secondary with dark mode
+<TouchableOpacity style={colorScheme === 'dark' ? ButtonStyles.secondaryDark : ButtonStyles.secondary}>
+  <Text style={colorScheme === 'dark' ? ButtonStyles.secondaryTextDark : ButtonStyles.secondaryText}>
+    Cancel
+  </Text>
+</TouchableOpacity>
+```
+
+#### **Size Variants**
+```typescript
+// ✅ Large button (prominent actions)
+<TouchableOpacity style={ButtonStyles.large}>
+  <Text style={ButtonStyles.largeText}>Get Started</Text>
+</TouchableOpacity>
+
+// ✅ Small button (compact spaces)
+<TouchableOpacity style={ButtonStyles.small}>
+  <Text style={ButtonStyles.smallText}>Skip</Text>
+</TouchableOpacity>
+```
+
+#### **Icon Buttons**
+```typescript
+// ✅ Standard icon button (44pt - perfect touch target)
+<TouchableOpacity style={ButtonStyles.icon}>
+  <Icon name="heart" size={20} color={colors.primary} />
+</TouchableOpacity>
+
+// ✅ Small icon button (32pt for compact areas)
+<TouchableOpacity style={ButtonStyles.iconSmall}>
+  <Icon name="close" size={16} color={colors.textSecondary} />
+</TouchableOpacity>
+
+// ✅ Large icon button (56pt for prominent actions)
+<TouchableOpacity style={ButtonStyles.iconLarge}>
+  <Icon name="play" size={28} color="#FFFFFF" />
+</TouchableOpacity>
+```
+
+#### **Specialized Button Styles**
+```typescript
+// ✅ Destructive button (delete/warning actions)
+<TouchableOpacity style={ButtonStyles.destructive}>
+  <Text style={ButtonStyles.destructiveText}>Delete Account</Text>
+</TouchableOpacity>
+
+// ✅ Ghost button (minimal style)
+<TouchableOpacity style={ButtonStyles.ghost}>
+  <Text style={ButtonStyles.ghostText}>Learn More</Text>
+</TouchableOpacity>
+
+// ✅ Disabled button state
+<TouchableOpacity 
+  style={[ButtonStyles.primary, ButtonStyles.disabled]}
+  disabled={true}
+>
+  <Text style={[ButtonStyles.primaryText, { opacity: 0.6 }]}>
+    Disabled
+  </Text>
+</TouchableOpacity>
+```
+
+### **Dynamic Button Styles**
+```typescript
+// ✅ Get button styles based on color scheme
+import { getButtonStyles } from '@/constants/ButtonStyles';
+
+const buttonStyles = getButtonStyles(colorScheme);
+
+<TouchableOpacity style={buttonStyles.primary}>
+  <Text style={buttonStyles.primaryText}>Dynamic Button</Text>
+</TouchableOpacity>
+```
+
+### **Button Features**
+- ✅ **Scale animations** on press (0.95x for regular, 0.9x for icons)
+- ✅ **Smooth transitions** with easeInOut timing
+- ✅ **Theme integration** using color and font systems
+- ✅ **Consistent dimensions** and corner radius
+- ✅ **Accessibility compliance** with proper touch targets (minimum 44pt)
+- ✅ **Platform shadows** (iOS shadows, Android elevation)
+
+### **Custom Button Implementation**
+```typescript
+// ✅ Custom button with theme integration
+interface CustomButtonProps {
+  title: string;
+  onPress: () => void;
+  variant?: 'primary' | 'secondary' | 'destructive';
+  size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
+  loading?: boolean;
+}
+
+export default function CustomButton({
+  title,
+  onPress,
+  variant = 'primary',
+  size = 'medium',
+  disabled = false,
+  loading = false,
+}: CustomButtonProps) {
+  const colorScheme = useColorScheme();
+  const buttonStyles = getButtonStyles(colorScheme);
+  
+  const containerStyle = React.useMemo(() => [
+    buttonStyles[variant],
+    size === 'small' && buttonStyles.small,
+    size === 'large' && buttonStyles.large,
+    disabled && buttonStyles.disabled,
+  ], [variant, size, disabled, buttonStyles]);
+  
+  const textStyle = React.useMemo(() => [
+    buttonStyles[`${variant}Text`],
+    size === 'small' && buttonStyles.smallText,
+    size === 'large' && buttonStyles.largeText,
+    disabled && { opacity: 0.6 },
+  ], [variant, size, disabled, buttonStyles]);
+  
+  return (
+    <TouchableOpacity
+      style={containerStyle}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading }}
+    >
+      {loading ? (
+        <ActivityIndicator size="small" color="#FFFFFF" />
+      ) : (
+        <Text style={textStyle}>{title}</Text>
+      )}
+    </TouchableOpacity>
+  );
+}
+```
+
+### **Button Accessibility**
+```typescript
+// ✅ Proper button accessibility
+<TouchableOpacity
+  style={ButtonStyles.primary}
+  onPress={handlePress}
+  accessibilityRole="button"
+  accessibilityLabel="Save your changes"
+  accessibilityHint="Saves the current form data"
+  accessibilityState={{ 
+    disabled: isDisabled,
+    busy: isLoading 
+  }}
+>
+  <Text style={ButtonStyles.primaryText}>Save</Text>
+</TouchableOpacity>
+```
+
+---
+
+## 🏗️ **Theme Architecture**
+
+### **File Structure**
+```
+constants/
+├── Colors.ts         # Color palette with light/dark support
+├── Fonts.ts          # Typography system with comprehensive hierarchy
+└── ButtonStyles.ts   # Button style system with variants
+```
+
+### **Integration Pattern**
+```typescript
+// ✅ Standard theme integration in components
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Colors, Fonts, ButtonStyles } from '@/constants';
+import { useColorScheme } from '@/hooks/useColorScheme';
+
+export default function ThemedComponent() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  
+  return (
+    <View style={{ backgroundColor: colors.backgroundPrimary }}>
+      <Text style={[Fonts.titleLarge, { color: colors.textPrimary }]}>
+        Themed Title
+      </Text>
+      
+      <Text style={[Fonts.bodyMedium, { color: colors.textSecondary }]}>
+        Themed content with proper hierarchy
+      </Text>
+      
+      <TouchableOpacity style={ButtonStyles.primary}>
+        <Text style={ButtonStyles.primaryText}>Themed Button</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+```
+
+### **Custom Hook for Theme**
+```typescript
+// ✅ Custom hook for easier theme access
+export function useTheme() {
+  const colorScheme = useColorScheme();
+  
+  return React.useMemo(() => ({
+    colors: Colors[colorScheme ?? 'light'],
+    fonts: Fonts,
+    buttonStyles: getButtonStyles(colorScheme),
+    isDark: colorScheme === 'dark',
+  }), [colorScheme]);
+}
+
+// Usage in components
+export default function Component() {
+  const { colors, fonts, buttonStyles, isDark } = useTheme();
+  
+  return (
+    <View style={{ backgroundColor: colors.backgroundPrimary }}>
+      <Text style={[fonts.titleMedium, { color: colors.textPrimary }]}>
+        Easy theme access
+      </Text>
+    </View>
+  );
+}
+```
+
+---
+
+## 🎯 **Design Principles**
+
+### **Core Design Values**
+1. **Consistency** - Uniform appearance across all screens and components
+2. **Accessibility** - WCAG compliant colors and typography
+3. **Scalability** - Easy to extend and modify
+4. **Performance** - Optimized for React Native rendering
+5. **Maintainability** - Clear organization and semantic naming
+6. **Cross-Platform** - Works beautifully on iOS and Android
+7. **Dark Mode** - Full support with automatic switching
+
+### **Usage Guidelines**
+1. **Always use theme system** - Never hard-code colors or fonts
+2. **Test both modes** - Verify light and dark themes work properly
+3. **Maintain hierarchy** - Use appropriate font sizes for content importance
+4. **Consider accessibility** - Ensure proper contrast and touch targets
+5. **Follow semantic naming** - Use meaningful color and font names
+6. **Document customizations** - Explain any theme modifications
+
+### **Performance Considerations**
+```typescript
+// ✅ Memoize theme-dependent styles
+const styles = React.useMemo(() => StyleSheet.create({
+  container: {
+    backgroundColor: colors.backgroundPrimary,
+    padding: 24,
+  },
+  title: {
+    ...Fonts.titleLarge,
+    color: colors.textPrimary,
+    marginBottom: 16,
+  },
+}), [colors]);
+
+// ✅ Use StyleSheet.create for better performance
+const staticStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 24,
+  },
+});
+```
+
+---
+
+## 🧪 **Testing Theme System**
+
+### **Color Contrast Testing**
+```typescript
+// ✅ Test color combinations for accessibility
+const testColorContrast = (foreground: string, background: string) => {
+  const ratio = calculateContrastRatio(foreground, background);
+  const isAccessible = ratio >= 4.5; // WCAG AA standard
+  
+  console.log(`Contrast ratio: ${ratio}, Accessible: ${isAccessible}`);
+  return isAccessible;
+};
+
+// Test all color combinations
+testColorContrast(Colors.light.textPrimary, Colors.light.backgroundPrimary);
+testColorContrast(Colors.dark.textPrimary, Colors.dark.backgroundPrimary);
+```
+
+### **Theme Testing in Components**
+```typescript
+// ✅ Test component with both themes
+import { render } from '@testing-library/react-native';
+import { Colors } from '@/constants';
+
+describe('ThemedComponent', () => {
+  it('renders correctly in light mode', () => {
+    const { getByText } = render(<ThemedComponent />);
+    // Test light mode rendering
+  });
+  
+  it('renders correctly in dark mode', () => {
+    // Mock dark mode
+    jest.mock('@/hooks/useColorScheme', () => ({
+      useColorScheme: () => 'dark',
+    }));
+    
+    const { getByText } = render(<ThemedComponent />);
+    // Test dark mode rendering
+  });
+});
+```
+
+---
+
+## 🌟 **Best Practices Summary**
+
+### **Theme System Rules**
+1. **Import from constants** - Always use `@/constants` imports
+2. **Use semantic names** - Prefer `.textPrimary` over color values
+3. **Support both modes** - Test light and dark themes
+4. **Follow hierarchy** - Use appropriate font sizes
+5. **Optimize performance** - Memoize theme-dependent styles
+6. **Test accessibility** - Verify contrast ratios and touch targets
+7. **Document changes** - Explain theme modifications
+8. **Stay consistent** - Follow established patterns
+
+### **For Novice Developers**
+- **Start with examples** - Copy working patterns from existing components
+- **Use the provided hooks** - Leverage `useColorScheme` and custom theme hooks
+- **Test frequently** - Switch between light/dark modes during development
+- **Focus on semantics** - Think about what colors represent, not their values
+- **Ask for help** - Theme consistency is crucial for app quality
+
+### **Advanced Customization**
+```typescript
+// ✅ Extend theme system for specific needs
+export const CustomTheme = {
+  ...Colors,
+  custom: {
+    gradient: ['#FF6B6B', '#4ECDC4'],
+    brand: {
+      primary: '#FF6B6B',
+      secondary: '#4ECDC4',
+      tertiary: '#45B7D1',
+    },
+  },
+};
+
+// ✅ Create theme variants
+export const createThemeVariant = (baseTheme: any, overrides: any) => ({
+  ...baseTheme,
+  ...overrides,
+});
+```
+
+Remember: A consistent theme system is the foundation of a professional, accessible, and maintainable app. Invest time in understanding and properly implementing these patterns!
