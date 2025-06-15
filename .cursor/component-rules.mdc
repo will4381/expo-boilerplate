@@ -1,5 +1,5 @@
 ---
-description: 
+description: Component structure of the app and rules regarding it.
 globs: 
 alwaysApply: false
 ---

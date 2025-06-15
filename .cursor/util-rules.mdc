@@ -1,5 +1,5 @@
 ---
-description: 
+description: Utility rules regarding our services throughout the app.
 globs: 
 alwaysApply: false
 ---
