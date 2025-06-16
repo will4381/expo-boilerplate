@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { SuperwallService } from '@/utils/superwallService';
 import { UserManager } from '@/utils/userManager';
 import SplashView from './splashView';
 
@@ -15,17 +16,26 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   const [showSplash, setShowSplash] = useState(true);
-  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+  const [initialRoute, setInitialRoute] = useState<'/(onboarding)/welcomeView' | '/(tabs)/mainView' | null>(null);
 
   const handleSplashComplete = async () => {
     try {
+      // Configure Superwall with API key from environment variables
+      const superwallApiKey = process.env.EXPO_PUBLIC_SUPERWALL_API_KEY;
+      if (superwallApiKey) {
+        SuperwallService.shared.configure(superwallApiKey, __DEV__);
+        console.log('✅ Superwall configured successfully');
+      } else {
+        console.warn('⚠️ Superwall API key not found in environment variables');
+      }
+
       // Load user state while splash is completing
       await UserManager.shared.checkAuthenticationStatus();
       
       const needsOnboarding = !UserManager.shared.isOnboardingCompleted;
       
       // Determine initial route
-      const route = needsOnboarding ? '/(onboarding)/welcomeView' : '/(tabs)/mainView';
+      const route: '/(onboarding)/welcomeView' | '/(tabs)/mainView' = needsOnboarding ? '/(onboarding)/welcomeView' : '/(tabs)/mainView';
       setInitialRoute(route);
       
       // Hide splash

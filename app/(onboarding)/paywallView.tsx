@@ -1,36 +1,32 @@
 /*
- * PAYWALL VIEW - SUPERWALL PLACEHOLDER
+ * PAYWALL VIEW - SUPERWALL INTEGRATION
  * 
- * This is a placeholder for where your Superwall paywall will be displayed.
+ * This view integrates with Superwall to show actual paywalls.
  * 
  * Features:
- * - Placeholder for Superwall integration
- * - Continue and skip options for user flow
- * - Safe area handling for iOS
- * - Theme integration with consistent styling
+ * - Real Superwall paywall integration
+ * - Placement registration and handling
+ * - Loading states and error handling
+ * - Proper navigation flow based on paywall results
  * 
- * To Implement Real Paywall:
+ * Configuration:
  * 1. Set up your Superwall dashboard and configure paywalls
- * 2. Replace this placeholder with Superwall's PaywallView
- * 3. Handle subscription success/failure callbacks
- * 4. Add analytics tracking for conversion optimization
- * 
- * Superwall Integration:
- * - Use SuperwallService.shared.register() to trigger paywalls
- * - Configure your paywall templates in the Superwall dashboard
- * - Handle purchase events and subscription status
+ * 2. Create a placement named 'onboarding_paywall' (or customize below)
+ * 3. Design your paywall template in the Superwall dashboard
+ * 4. Configure audience targeting and pricing
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { getButtonStyles } from '@/constants/ButtonStyles';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Fonts';
-import { getButtonStyles } from '@/constants/ButtonStyles';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { PlacementResult, SuperwallService } from '@/utils/superwallService';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PaywallView() {
   const colorScheme = useColorScheme();
@@ -38,68 +34,206 @@ export default function PaywallView() {
   const fonts = Fonts;
   const buttonStyles = getButtonStyles(colorScheme);
   
-  const handleContinue = async () => {
-    // Add haptic feedback
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    // In a real implementation, this would handle subscription success
-    // For now, just navigate to next step
-    router.push('/(onboarding)/questionView');
+  const [isLoading, setIsLoading] = useState(true);
+  const [paywallResult, setPaywallResult] = useState<PlacementResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // The placement name - this should match what you configure in Superwall dashboard
+  const PLACEMENT_NAME = 'onboarding_paywall';
+
+  useEffect(() => {
+    registerPaywallPlacement();
+  }, []);
+
+  const registerPaywallPlacement = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Register the placement with Superwall
+      const result = await SuperwallService.shared.register(PLACEMENT_NAME, {
+        source: 'onboarding',
+        step: 'paywall_view',
+        user_journey: 'first_launch'
+      });
+
+      setPaywallResult(result);
+
+      // Handle the result
+      switch (result) {
+        case PlacementResult.PAYWALL_PRESENTED:
+          console.log('✅ Superwall paywall was presented');
+          // The paywall will show automatically, we just wait for user action
+          break;
+          
+        case PlacementResult.PAYWALL_NOT_PRESENTED:
+          console.log('ℹ️ Superwall paywall not presented (user may not be eligible)');
+          // Continue to next step since no paywall was shown
+          setTimeout(() => {
+            router.push('/(onboarding)/questionView');
+          }, 1000);
+          break;
+          
+        case PlacementResult.USER_ALREADY_SUBSCRIBED:
+          console.log('💰 User is already subscribed');
+          // Skip paywall and continue
+          setTimeout(() => {
+            router.push('/(onboarding)/questionView');
+          }, 1000);
+          break;
+          
+        case PlacementResult.PLACEMENT_NOT_FOUND:
+          console.log('❌ Placement not found in Superwall dashboard');
+          setError('Paywall configuration not found. Please check your Superwall dashboard.');
+          break;
+          
+        case PlacementResult.ERROR:
+          console.log('❌ Error presenting paywall');
+          setError('Unable to load paywall. Please try again.');
+          break;
+      }
+    } catch (error) {
+      console.error('Error registering paywall placement:', error);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSkip = async () => {
-    // Add haptic feedback
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    // Navigate to next step
     router.push('/(onboarding)/questionView');
   };
 
+  const handleRetry = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    registerPaywallPlacement();
+  };
+
+  // Listen for Superwall events
+  useEffect(() => {
+    const handlePaywallEvent = (eventData: any) => {
+      console.log('Superwall event:', eventData);
+      
+      // Handle subscription success
+      if (eventData.type === 'subscriptionStart' || eventData.type === 'transactionComplete') {
+        console.log('🎉 User subscribed successfully!');
+        // Navigate to next step after successful subscription
+        router.push('/(onboarding)/questionView');
+      }
+      
+      // Handle paywall dismissed/closed
+      if (eventData.type === 'paywallClose' || eventData.type === 'paywallDecline') {
+        console.log('Paywall was dismissed');
+        // User can still continue to next step
+      }
+    };
+
+    // Add event listener
+    SuperwallService.shared.on('placementRegistered', handlePaywallEvent);
+    SuperwallService.shared.on('paywallPresented', handlePaywallEvent);
+    SuperwallService.shared.on('subscriptionStatusChanged', handlePaywallEvent);
+
+    return () => {
+      // Clean up event listeners
+      SuperwallService.shared.off('placementRegistered', handlePaywallEvent);
+      SuperwallService.shared.off('paywallPresented', handlePaywallEvent);
+      SuperwallService.shared.off('subscriptionStatusChanged', handlePaywallEvent);
+    };
+  }, []);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundPrimary }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }, fonts.bodyLarge]}>
+            Loading paywall...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundPrimary }]}>
+        <View style={styles.content}>
+          <View style={styles.iconContainer}>
+            <Ionicons 
+              name="alert-circle" 
+              size={80} 
+              color={colors.error || '#FF3B30'}
+            />
+          </View>
+
+          <View style={styles.textContainer}>
+            <Text style={[styles.title, { color: colors.textPrimary }, fonts.displayMedium]}>
+              Oops!
+            </Text>
+            
+            <Text style={[styles.subtitle, { color: colors.textSecondary }, fonts.bodyLarge]}>
+              {error}
+            </Text>
+          </View>
+
+          <View style={styles.buttonArea}>
+            <TouchableOpacity 
+              style={[styles.primaryButton, buttonStyles.primary]}
+              onPress={handleRetry}
+            >
+              <Text style={[styles.primaryButtonText, { color: '#FFFFFF' }, fonts.buttonLarge]}>
+                Try Again
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.secondaryButton, buttonStyles.secondary]}
+              onPress={handleSkip}
+            >
+              <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }, fonts.buttonMedium]}>
+                Skip for Now
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Success state - when paywall is not shown but placement was successful
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundPrimary }]}>
       <View style={styles.content}>
-        
-        {/* Superwall Icon */}
         <View style={styles.iconContainer}>
           <Ionicons 
-            name="diamond" 
+            name="checkmark-circle" 
             size={80} 
-            color={colors.primary}
+            color={colors.success || '#34C759'}
           />
         </View>
 
-        {/* Content */}
         <View style={styles.textContainer}>
           <Text style={[styles.title, { color: colors.textPrimary }, fonts.displayMedium]}>
-            Superwall Paywall
+            Ready to Continue
           </Text>
           
           <Text style={[styles.subtitle, { color: colors.textSecondary }, fonts.bodyLarge]}>
-            This is where your Superwall paywall will show
-          </Text>
-          
-          <Text style={[styles.description, { color: colors.textSecondary }, fonts.captionLarge]}>
-            Replace this placeholder with your actual Superwall integration
+            {paywallResult === PlacementResult.USER_ALREADY_SUBSCRIBED 
+              ? "You're already subscribed!" 
+              : "Let's keep setting up your account"}
           </Text>
         </View>
 
-        {/* Button Area */}
         <View style={styles.buttonArea}>
           <TouchableOpacity 
             style={[styles.primaryButton, buttonStyles.primary]}
-            onPress={handleContinue}
-          >
-            <Text style={[styles.primaryButtonText, { color: '#FFFFFF' }, fonts.buttonLarge]}>
-              Continue with Premium
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.secondaryButton, buttonStyles.secondary]}
             onPress={handleSkip}
           >
-            <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }, fonts.buttonMedium]}>
-              Skip for Now
+            <Text style={[styles.primaryButtonText, { color: '#FFFFFF' }, fonts.buttonLarge]}>
+              Continue
             </Text>
           </TouchableOpacity>
         </View>
@@ -111,13 +245,22 @@ export default function PaywallView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Replace with your background color
   },
   content: {
     flex: 1,
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
   iconContainer: {
     flex: 1,
@@ -133,22 +276,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#000000', // Replace with your text primary color
     textAlign: 'center',
     marginBottom: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666', // Replace with your text secondary color
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 12,
-  },
-  description: {
-    fontSize: 12,
-    color: '#666666', // Replace with your text secondary color
-    textAlign: 'center',
-    lineHeight: 18,
   },
   buttonArea: {
     width: '100%',
@@ -156,14 +291,12 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   primaryButton: {
-    backgroundColor: '#007AFF', // Replace with your primary color
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
     alignItems: 'center',
   },
   primaryButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -174,7 +307,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: '#666666', // Replace with your text secondary color
     fontSize: 16,
     fontWeight: '500',
   },
